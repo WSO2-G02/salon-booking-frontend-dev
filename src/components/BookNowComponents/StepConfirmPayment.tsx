@@ -1,6 +1,7 @@
 'use client'
 
 import { bookAppointment } from '@/services/appointmentService'
+import { showToast } from '@/components/Toast'
 import { useState } from 'react'
 
 interface Props {
@@ -11,19 +12,17 @@ interface Props {
 
 export default function StepConfirmPayment({ service, date, time }: Props) {
   const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState<string | null>(null)
 
   const handleConfirm = async () => {
     setLoading(true)
-    setStatus(null)
     try {
       const res = await bookAppointment({
         service_id: service,
         appointment_datetime: `${date}T${time}`,
       })
-      setStatus(`✅ Appointment confirmed! ID: ${res.appointment_id}`)
+      showToast(`Appointment confirmed! ID: ${res.appointment_id}`, 'success')
     } catch (err: any) {
-      setStatus(`❌ ${err.message}`)
+      showToast(err.message || 'Booking failed', 'error')
     } finally {
       setLoading(false)
     }
@@ -48,8 +47,6 @@ export default function StepConfirmPayment({ service, date, time }: Props) {
         >
           {loading ? 'Processing...' : 'Confirm Appointment'}
         </button>
-
-        {status && <p className="mt-4">{status}</p>}
       </div>
     </div>
   )

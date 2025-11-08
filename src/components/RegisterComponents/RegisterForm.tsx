@@ -4,6 +4,7 @@ import { useState } from 'react'
 import InputField from './InputField'
 import SubmitButton from './SubmitButton'
 import { registerUser } from '@/services/userService'
+import { showToast } from '@/components/Toast'
 import Link from 'next/link'
 
 export default function RegisterForm() {
@@ -15,7 +16,6 @@ export default function RegisterForm() {
     phone: '',
   })
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -24,15 +24,14 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setMessage(null)
 
     try {
       const res = await registerUser(form)
-      setMessage(`✅ Registered successfully! Welcome, ${res.username || res.full_name}`)
+      showToast(`Registered successfully! Welcome, ${res.username || res.full_name}`, 'success')
       setForm({ email: '', username: '', password: '', full_name: '', phone: '' })
-      setTimeout(() => (window.location.href = '/login'), 1000)
+      setTimeout(() => (window.location.href = '/login'), 1500)
     } catch (err: any) {
-      setMessage(`❌ ${err.message}`)
+      showToast(err.message || 'Registration failed', 'error')
     } finally {
       setLoading(false)
     }
@@ -52,16 +51,6 @@ export default function RegisterForm() {
       <InputField label="Password" name="password" type="password" value={form.password} onChange={handleChange} />
 
       <SubmitButton text="Register" loading={loading} />
-
-      {message && (
-        <p
-          className={`text-center mt-4 ${
-            message.startsWith('✅') ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
-          {message}
-        </p>
-      )}
 
       <p className="text-center mt-6 text-sm text-gray-600">
         Already have an account?{' '}

@@ -1,7 +1,7 @@
 /**
  * Toast Notification Component
  * 
- * Modern toast notification system for success, error, warning, and info messages.
+ * Toast notification system for success, error, warning, and info messages.
  * Automatically dismisses after a set duration and supports manual dismissal.
  * 
  * Features:

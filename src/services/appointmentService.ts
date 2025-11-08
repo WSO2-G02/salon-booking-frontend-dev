@@ -19,7 +19,7 @@ export async function getAvailableSlots(staffId: number, serviceId: number, date
   await new Promise((resolve) => setTimeout(resolve, 800))
 
   // 🎯 Mock slots — pretend backend checked availability
-  const mockSlots = {
+  const mockSlots: { [key: string]: string[] } = {
     "2025-10-12": ["09:00", "10:30", "13:00", "15:00", "17:30"],
     "2025-10-13": ["09:30", "11:00", "14:00", "16:30"],
     "2025-10-14": ["10:00", "11:30", "13:30", "15:30", "17:00"],
