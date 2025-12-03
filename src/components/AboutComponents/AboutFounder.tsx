@@ -4,13 +4,13 @@ export default function AboutFounder() {
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center px-5">
         <div>
           <p className="text-gray-700 text-lg leading-relaxed mb-6">
-            Welcome to Liyo Salon Private Limited, your ultimate destination for beauty and elegance.
+            Welcome to AURORA Salon Private Limited, your ultimate destination for beauty and elegance.
             Since our inception on September 15 th, 2009, we’ve been dedicated to providing exceptional
             beauty services that enhance your natural charm and boost your confidence.
           </p>
           <p className="text-gray-700 text-lg leading-relaxed mb-6">
             Our journey from Highlevel Road, Wijerama, to our luxurious new location at Pagoda Road,
-            Nugegoda, reflects our growth and commitment to excellence. At Liyo Salon, we believe in
+            Nugegoda, reflects our growth and commitment to excellence. At AURORA Salon, we believe in
             the transformative power of beauty and personalized care using the latest techniques and
             top-quality products.
           </p>
@@ -20,7 +20,7 @@ export default function AboutFounder() {
             experiences.
           </p>
           <h3 className="text-2xl font-bold">Dhanushka Chathuranga</h3>
-          <p className="font-semibold text-gray-600">Founder, Liyo Salon (Pvt) Ltd</p>
+          <p className="font-semibold text-gray-600">Founder, AURORA Salon (Pvt) Ltd</p>
         </div>
 
         <div>

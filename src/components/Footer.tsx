@@ -2,7 +2,7 @@ export default function Footer() {
   return (
     <footer className="bg-black text-gray-300 py-10 px-10 grid md:grid-cols-3 gap-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-4">LIYO</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">AURORA</h1>
         <div className="flex gap-3">
           <a href="#"><i className="fab fa-facebook"></i></a>
           <a href="#"><i className="fab fa-instagram"></i></a>

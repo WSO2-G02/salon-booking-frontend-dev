@@ -13,7 +13,7 @@ export default function AboutJourney() {
 
         <div>
           <p className="text-lg leading-relaxed text-gray-700">
-            Liyo Salon was founded on <b>September 15 th, 2009</b>, by Dhanushka Chathuranga at Highlevel Road, Wijerama, with a vision to provide exceptional beauty services.
+            AURORA Salon was founded on <b>September 15 th, 2009</b>, by Dhanushka Chathuranga at Highlevel Road, Wijerama, with a vision to provide exceptional beauty services.
             In 2012, to better serve our growing clientele, we expanded our services and relocated to a
             larger, more sophisticated space at Jambugasmulla, Nugegoda. This move allowed us to offer
             a wider range of services and enhance our client experience — further establishing our

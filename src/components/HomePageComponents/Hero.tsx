@@ -17,7 +17,7 @@ export default function Hero() {
       {/* Text content */}
       <div className="relative z-10 max-w-lg">
         <h1 className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">
-          Experience the Elegance of Liyo Salon
+          Experience the Elegance of AURORA Salon
         </h1>
         <p className="text-lg drop-shadow-md">
           Where expert care meets luxurious services for a transformative beauty experience in Sri Lanka.

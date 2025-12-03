@@ -11,7 +11,7 @@ export default function Navbar() {
 
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-black text-white">
-      <div className="text-3xl font-bold tracking-widest">LIYO</div>
+      <div className="text-3xl font-bold tracking-widest">AURORA</div>
 
       <div className="space-x-8 hidden md:flex">
         {links.map((link) => (

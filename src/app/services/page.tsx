@@ -5,7 +5,7 @@ import AboutVisionMission from "@/components/AboutComponents/AboutVisionMission"
 import Footer from "@/components/Footer"
 import Nav from "@/components/Navbar"
 import Products from "@/components/HomePageComponents/Products"
-import Services from "@/components/HomePageComponents/Services"
+import Services from "@/components/HomePageComponents/ServicesSection"
 
 export default function AboutPage() {
   return (
