@@ -346,8 +346,8 @@ export default function StaffManagementSection() {
          DELETE CONFIRM MODAL
       ---------------------------- */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-80">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-80 border border-gray-200">
             <h3 className="text-lg font-bold mb-3 text-center text-red-600">
               Delete Staff Member?
             </h3>
@@ -420,10 +420,10 @@ function StaffModal({
   showUserFields,
 }: StaffModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <form
         onSubmit={onSubmit}
-        className="bg-white p-8 rounded-lg shadow-xl w-96"
+        className="bg-white p-8 rounded-lg shadow-xl w-96 border border-gray-200"
       >
         <h3 className="text-xl font-bold mb-4">{title}</h3>
 

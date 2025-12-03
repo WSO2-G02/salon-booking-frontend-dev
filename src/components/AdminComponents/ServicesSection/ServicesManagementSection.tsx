@@ -296,8 +296,8 @@ interface ModalProps {
 
 function Modal({ title, children, onCancel, onSubmit }: ModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <form onSubmit={onSubmit} className="bg-white p-8 rounded-lg shadow-xl w-96">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <form onSubmit={onSubmit} className="bg-white p-8 rounded-lg shadow-xl w-96 border border-gray-200">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
 
         {children}

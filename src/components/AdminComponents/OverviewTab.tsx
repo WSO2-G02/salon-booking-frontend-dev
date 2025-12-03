@@ -33,7 +33,8 @@ import {
   Users, 
   Scissors, 
   AlertCircle,
-  Wifi 
+  Wifi,
+  LayoutDashboard
 } from 'lucide-react'
 import { showToast } from '@/components/Toast'
 
@@ -261,19 +262,6 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
   }
 
   // =====================================================
-  // LOADING STATE
-  // =====================================================
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-red-500 border-t-transparent mb-4"></div>
-        <p className="text-gray-600">Loading dashboard data...</p>
-      </div>
-    )
-  }
-
-  // =====================================================
   // ERROR STATE
   // =====================================================
 
@@ -299,16 +287,26 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Welcome back, Admin!</h1>
-            <p className="text-slate-300">Here&apos;s what&apos;s happening at Aurora Salon today</p>
+      {/* ================================================= */}
+      {/* HEADER SECTION                                   */}
+      {/* ================================================= */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Title with icon */}
+          <div className="flex items-center space-x-3">
+            <LayoutDashboard size={28} className="text-red-600" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Welcome back, Admin!</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Here&apos;s what&apos;s happening at Aurora Salon today
+              </p>
+            </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-sm">
-            <Wifi size={16} className={serviceHealth.every(s => s.status === 'online') ? 'text-green-400' : 'text-yellow-400'} />
-            <span className="text-slate-300">
+          
+          {/* Service Status Indicator */}
+          <div className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-50 rounded-lg">
+            <Wifi size={16} className={serviceHealth.every(s => s.status === 'online') ? 'text-green-500' : 'text-yellow-500'} />
+            <span className="text-gray-600">
               {serviceHealth.filter(s => s.status === 'online').length}/{serviceHealth.length} services online
             </span>
           </div>
@@ -324,6 +322,7 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
           change={stats.appointmentsTrend}
           bgColor="bg-blue-50"
           iconColor="text-blue-600"
+          loading={loading}
         />
         <StatCard
           Icon={DollarSign}
@@ -332,6 +331,7 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
           change={stats.revenueTrend}
           bgColor="bg-green-50"
           iconColor="text-green-600"
+          loading={loading}
         />
         <StatCard
           Icon={Users}
@@ -340,6 +340,7 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
           change={stats.customersTrend}
           bgColor="bg-purple-50"
           iconColor="text-purple-600"
+          loading={loading}
         />
         <StatCard
           Icon={Scissors}
@@ -347,6 +348,7 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
           label="Active Services"
           bgColor="bg-orange-50"
           iconColor="text-orange-600"
+          loading={loading}
         />
       </div>
 
@@ -354,8 +356,8 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Schedule & Activity */}
         <div className="lg:col-span-2 space-y-6">
-          <TodayScheduleCard schedule={schedule} />
-          <RecentActivityCard activities={activities} />
+          <TodayScheduleCard schedule={schedule} loading={loading} />
+          <RecentActivityCard activities={activities} loading={loading} />
         </div>
 
         {/* Right Column - Charts & Quick Actions */}
@@ -364,15 +366,17 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
             data={revenueData}
             totalRevenue={revenueData.reduce((sum, d) => sum + d.revenue, 0)}
             changePercent={stats.revenueTrend}
+            loading={loading}
           />
           <QuickActionsCard onTabChange={handleTabChange} />
-          <TopServicesCard services={topServices} />
+          <TopServicesCard services={topServices} loading={loading} />
         </div>
       </div>
 
       {/* Service Health Section */}
       <ServiceHealthCard
         services={serviceHealth}
+        loading={loading}
         onRefresh={checkServiceHealth}
       />
 
