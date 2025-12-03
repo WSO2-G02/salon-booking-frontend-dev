@@ -46,7 +46,7 @@ export default function ServicesManagementSection() {
       const res = await servicesApiFetch("/services", { method: "GET" });
       const data = await res.json();
       setServices(data);
-    } catch (e) {
+    } catch {
       console.error("Failed to load services");
     }
 
@@ -60,7 +60,7 @@ export default function ServicesManagementSection() {
   // -------------------------------------------------
   // CREATE SERVICE
   // -------------------------------------------------
-  async function createService(e: any) {
+  async function createService(e: React.FormEvent) {
     e.preventDefault();
 
     try {
@@ -85,7 +85,7 @@ export default function ServicesManagementSection() {
       });
 
       await loadServices();
-    } catch (e) {
+    } catch {
       showToast("Failed to create service", "error");
     }
   }
@@ -93,7 +93,7 @@ export default function ServicesManagementSection() {
   // -------------------------------------------------
   // UPDATE SERVICE
   // -------------------------------------------------
-  async function updateExistingService(e: any) {
+  async function updateExistingService(e: React.FormEvent) {
     e.preventDefault();
     if (!editService) return;
 
@@ -111,7 +111,7 @@ export default function ServicesManagementSection() {
 
       setEditService(null);
       await loadServices();
-    } catch (e) {
+    } catch {
       showToast("Update failed", "error");
     }
   }
@@ -139,7 +139,7 @@ export default function ServicesManagementSection() {
       setDeleteId(null);
 
       await loadServices();
-    } catch (e) {
+    } catch {
       showToast("Failed to delete service", "error");
     }
 
@@ -240,12 +240,12 @@ export default function ServicesManagementSection() {
       {/* ADD MODAL */}
       {showAddForm && (
         <Modal title="Add Service" onCancel={() => setShowAddForm(false)} onSubmit={createService}>
-          {["name", "description", "category", "price", "duration_minutes"].map((field) => (
+          {(["name", "description", "category", "price", "duration_minutes"] as const).map((field) => (
             <input
               key={field}
               type={field === "price" || field === "duration_minutes" ? "number" : "text"}
               placeholder={field.replace("_", " ").toUpperCase()}
-              value={(form as any)[field]}
+              value={form[field]}
               onChange={(e) => updateForm(field, e.target.value)}
               className="border p-2 mb-3 w-full rounded"
               required
@@ -257,12 +257,12 @@ export default function ServicesManagementSection() {
       {/* EDIT MODAL */}
       {editService && (
         <Modal title="Edit Service" onCancel={() => setEditService(null)} onSubmit={updateExistingService}>
-          {["name", "description", "category", "price", "duration_minutes"].map((field) => (
+          {(["name", "description", "category", "price", "duration_minutes"] as const).map((field) => (
             <input
               key={field}
               type={field === "price" || field === "duration_minutes" ? "number" : "text"}
               placeholder={field.replace("_", " ").toUpperCase()}
-              value={(form as any)[field]}
+              value={form[field]}
               onChange={(e) => updateForm(field, e.target.value)}
               className="border p-2 mb-3 w-full rounded"
               required
@@ -287,7 +287,14 @@ export default function ServicesManagementSection() {
    SHARED MODALS
 ------------------------------------------------- */
 
-function Modal({ title, children, onCancel, onSubmit }: any) {
+interface ModalProps {
+  title: string;
+  children: React.ReactNode;
+  onCancel: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function Modal({ title, children, onCancel, onSubmit }: ModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <form onSubmit={onSubmit} className="bg-white p-8 rounded-lg shadow-xl w-96">
@@ -308,7 +315,13 @@ function Modal({ title, children, onCancel, onSubmit }: any) {
   );
 }
 
-function DeleteModal({ deleting, onCancel, onConfirm }: any) {
+interface DeleteModalProps {
+  deleting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function DeleteModal({ deleting, onCancel, onConfirm }: DeleteModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl shadow-xl w-80">

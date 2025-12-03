@@ -5,8 +5,17 @@ import { userApiFetch } from "@/lib/userApi";
 import { ShieldCheck, ShieldAlert, User, Pencil } from "lucide-react";
 import EditProfileModal from "./EditProfileModal"
 
+interface Profile {
+  full_name?: string;
+  username?: string;
+  is_verified?: boolean;
+  email?: string;
+  phone?: string;
+  user_type?: string;
+}
+
 export default function ProfileHeader() {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [showEdit, setShowEdit] = useState(false);
 
   async function load() {

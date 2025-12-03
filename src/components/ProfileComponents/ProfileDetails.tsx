@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import { userApiFetch } from "@/lib/userApi";
 import { Mail, Phone, Calendar } from "lucide-react";
 
+interface Profile {
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export default function ProfileDetails() {
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   async function load() {
     const res = await userApiFetch("/profile", { method: "GET" });
@@ -50,7 +57,7 @@ export default function ProfileDetails() {
               <Calendar className="w-5 h-5" />
               <span className="font-semibold">Member Since</span>
             </div>
-            <p className="text-slate-800">{profile.created_at.split("T")[0]}</p>
+            <p className="text-slate-800">{profile.created_at?.split("T")[0] || "Unknown"}</p>
           </div>
 
           {/* Updated */}
@@ -59,7 +66,7 @@ export default function ProfileDetails() {
               <Calendar className="w-5 h-5" />
               <span className="font-semibold">Last Updated</span>
             </div>
-            <p className="text-slate-800">{profile.updated_at.split("T")[0]}</p>
+            <p className="text-slate-800">{profile.updated_at?.split("T")[0] || "Unknown"}</p>
           </div>
         </div>
       </div>

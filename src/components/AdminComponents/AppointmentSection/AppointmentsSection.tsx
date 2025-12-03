@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 // import { appointmentsApiFetch } from "@/lib/appointmentApi";
 import { appointmentsApiFetch } from "@/lib/appointmentApi";
 import { Calendar } from "lucide-react";
@@ -32,7 +32,7 @@ export default function AppointmentsSection() {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
-  async function loadAppointments() {
+  const loadAppointments = useCallback(async () => {
     setLoading(true);
 
     const query = new URLSearchParams({
@@ -57,11 +57,11 @@ export default function AppointmentsSection() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page, limit, statusFilter, dateFilter]);
 
   useEffect(() => {
     loadAppointments();
-  }, [page, limit, statusFilter, dateFilter]);
+  }, [loadAppointments]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-8">

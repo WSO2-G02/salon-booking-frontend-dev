@@ -4,7 +4,19 @@ import { useState } from "react";
 import { userApiFetch } from "@/lib/userApi";
 import { showToast } from "@/components/Toast";
 
-export default function EditProfileModal({ profile, onClose, onUpdated }: any) {
+interface Profile {
+  full_name?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface EditProfileModalProps {
+  profile: Profile;
+  onClose: () => void;
+  onUpdated: () => void;
+}
+
+export default function EditProfileModal({ profile, onClose, onUpdated }: EditProfileModalProps) {
   const [form, setForm] = useState({
     full_name: profile.full_name || "",
     phone: profile.phone || "",
@@ -17,7 +29,7 @@ export default function EditProfileModal({ profile, onClose, onUpdated }: any) {
     setForm((p) => ({ ...p, [field]: value }));
   }
 
-  async function submit(e: any) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
 

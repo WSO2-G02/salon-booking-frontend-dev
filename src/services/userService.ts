@@ -1,4 +1,38 @@
+import { Token } from '@/lib/auth'
+
 export const API_BASE = process.env.NEXT_PUBLIC_USER_API_BASE
+
+/** ------------------ GET VALID ACCESS TOKEN ------------------ **/
+/**
+ * Returns a valid access token, refreshing if needed.
+ * Used by apiClient for authenticated requests.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  // If no access token at all, return null
+  const currentToken = Token.getAccess()
+  if (!currentToken) return null
+
+  // If token is still valid (not near expiry), return it
+  if (!Token.isAccessNearExpiry()) {
+    return currentToken
+  }
+
+  // Token is expired or near expiry - try to refresh
+  const refreshToken = Token.getRefresh()
+  if (!refreshToken || Token.isRefreshExpired()) {
+    Token.clear()
+    return null
+  }
+
+  try {
+    const result = await refreshAccessToken(refreshToken)
+    Token.updateAccessToken(result.access_token, result.expires_in)
+    return result.access_token
+  } catch {
+    Token.clear()
+    return null
+  }
+}
 
 /** ------------------ REGISTER ------------------ **/
 export async function registerUser(data: {
@@ -121,4 +155,27 @@ export async function refreshAccessToken(refreshToken: string) {
   }
 
   return result
+}
+
+/** ------------------ REFRESH TOKENS (WRAPPER) ------------------ **/
+/**
+ * Wrapper that gets refresh token from storage,
+ * calls refreshAccessToken, and updates Token storage.
+ * Used by api.ts for 401 retry logic.
+ */
+export async function refreshTokens() {
+  const refreshToken = Token.getRefresh()
+  if (!refreshToken) {
+    Token.clear()
+    throw new Error('No refresh token available')
+  }
+  
+  try {
+    const result = await refreshAccessToken(refreshToken)
+    Token.updateAccessToken(result.access_token, result.expires_in)
+    return result
+  } catch (error) {
+    Token.clear()
+    throw error
+  }
 }

@@ -4,12 +4,15 @@ export default function Hero() {
       {/* Background video */}
       <video
         className="absolute inset-0 w-full h-full object-cover"
-        src="https://www.salonliyo.com/assets/images/salonliyo.mp4"
         autoPlay
         loop
         muted
         playsInline
-      />
+        preload="auto"
+      >
+        <source src="https://www.salonliyo.com/assets/images/salonliyo.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
       {/* Overlay for dark effect */}
       <div className="absolute inset-0 bg-black/40"></div>

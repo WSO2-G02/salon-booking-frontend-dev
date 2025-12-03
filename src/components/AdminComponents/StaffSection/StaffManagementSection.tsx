@@ -119,8 +119,8 @@ export default function StaffManagementSection() {
       showToast("Staff member created successfully!", "success");
       setShowAddForm(false);
       loadStaff();
-    } catch (err: any) {
-      showToast(err.message || "Error creating staff", "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Error creating staff", "error");
     }
   }
 
@@ -152,8 +152,8 @@ export default function StaffManagementSection() {
       showToast("Staff updated successfully!", "success");
       setEditStaff(null);
       loadStaff();
-    } catch (err: any) {
-      showToast(err.message, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Update failed", "error");
     }
   }
 
@@ -174,8 +174,8 @@ export default function StaffManagementSection() {
       showToast("Staff deleted", "success");
       setShowDeleteModal(false);
       loadStaff();
-    } catch (err: any) {
-      showToast(err.message, "error");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Delete failed", "error");
     } finally {
       setDeleting(false);
     }
@@ -388,6 +388,29 @@ export default function StaffManagementSection() {
 /* ---------------------------
     REUSABLE STAFF MODAL
 ---------------------------- */
+
+interface StaffForm {
+  full_name: string;
+  username: string;
+  email: string;
+  password: string;
+  employee_id: string;
+  position: string;
+  specialties: string;
+  experience_years: string;
+  hire_date: string;
+  is_active: string;
+}
+
+interface StaffModalProps {
+  title: string;
+  form: StaffForm;
+  updateForm: (field: string, value: string) => void;
+  onCancel: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+  showUserFields: boolean;
+}
+
 function StaffModal({
   title,
   form,
@@ -395,7 +418,7 @@ function StaffModal({
   onCancel,
   onSubmit,
   showUserFields,
-}: any) {
+}: StaffModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <form

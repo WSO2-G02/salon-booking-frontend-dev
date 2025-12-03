@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { servicesApiFetch } from "@/lib/servicesApi";   // ✅ FIXED IMPORT
+import Image from "next/image";
+import { servicesApiFetch } from "@/lib/servicesApi";   
+
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  duration_minutes: number;
+}
 
 export default function ServicesSection() {
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -42,8 +52,11 @@ export default function ServicesSection() {
     <section className="py-20 px-10 grid md:grid-cols-2 gap-10">
       {services.map((s) => (
         <div key={s.id} className="flex gap-6">
-          <img
+          <Image
             src="https://www.salonliyo.com/assets/images/our-service.png"
+            alt={s.name}
+            width={300}
+            height={200}
             className="rounded-lg w-1/2 object-cover"
           />
 
