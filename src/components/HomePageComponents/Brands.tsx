@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function Brands() {
   const brands = [
     "https://www.salonliyo.com/assets/images/sub-logo-3.png",
@@ -15,7 +17,7 @@ export default function Brands() {
   return (
     <section className="py-10 bg-gray-100 flex justify-center gap-10 flex-wrap">
       {brands.map((src, i) => (
-        <img key={i} src={src} alt="brand" className="h-20 w-auto grayscale hover:grayscale-0 transition" />
+        <Image key={i} src={src} alt="brand" width={80} height={80} className="h-20 w-auto grayscale hover:grayscale-0 transition" />
       ))}
     </section>
   )

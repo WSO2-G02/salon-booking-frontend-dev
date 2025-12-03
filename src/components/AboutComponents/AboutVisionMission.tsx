@@ -1,12 +1,17 @@
+import Image from 'next/image'
+
 export default function AboutVisionMission() {
   return (
     <section className="py-20 bg-black text-white">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center px-5">
-        <img
-          src="https://th.bing.com/th/id/OIP.Jb8V4aalWUFQ_VcGTyHp2AHaEE?w=285&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3"
-          alt="Our Team"
-          className="rounded-lg shadow-lg object-cover w-full"
-        />
+        <div className="relative w-full h-64">
+          <Image
+            src="https://th.bing.com/th/id/OIP.Jb8V4aalWUFQ_VcGTyHp2AHaEE?w=285&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3"
+            alt="Our Team"
+            fill
+            className="rounded-lg shadow-lg object-cover"
+          />
+        </div>
 
         <div>
           <h2 className="text-4xl font-bold mb-6">Our Vision and Mission</h2>

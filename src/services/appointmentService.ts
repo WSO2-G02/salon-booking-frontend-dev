@@ -1,53 +1,42 @@
-// src/services/appointmentService.ts
+export const API_BASE = process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE
 
-import { appointmentsApiFetch } from "@/lib/appointmentApi";
-
-/**
- * Fetch available time slots for a given date, service and staff.
- * Example backend URL:
- * GET /appointments/available-slots?date=2025-01-01&service_id=3&staff_id=7
- */
-export async function getAvailableSlots(
-  date: string,
-  serviceId: string,
-  staffId: string
-) {
-  const query = new URLSearchParams({
-    date,
-    service_id: serviceId,
-    staff_id: staffId,
-  });
-
-  const res = await appointmentsApiFetch(
-    `/appointments/available-slots?${query.toString()}`,
-    {
-      method: "GET",
-    }
-  );
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw new Error(json.detail || "Failed to fetch available slots");
-  }
-
-  return res.json();
+interface BookAppointmentData {
+  staff_id?: string
+  service_id: string
+  appointment_datetime: string
 }
 
-/**
- * Book a new appointment
- * Backend endpoint: POST /api/v1/appointments
- */
-export async function bookAppointment(payload: any) {
-  const res = await appointmentsApiFetch("/appointments", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export async function bookAppointment(data: BookAppointmentData) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const res = await fetch(`${API_BASE}/api/v1/appointments/book`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error((await res.json()).detail || 'Booking failed')
+  return await res.json()
+}
 
-  const json = await res.json();
+export async function getAvailableSlots(staffId: number, serviceId: number, date: string) {
+  // simulate network latency
+  await new Promise((resolve) => setTimeout(resolve, 800))
 
-  if (!res.ok) {
-    throw new Error(json.detail || "Booking failed");
+  // Mock slots — pretend backend checked availability
+  const mockSlots: { [key: string]: string[] } = {
+    "2025-10-12": ["09:00", "10:30", "13:00", "15:00", "17:30"],
+    "2025-10-13": ["09:30", "11:00", "14:00", "16:30"],
+    "2025-10-14": ["10:00", "11:30", "13:30", "15:30", "17:00"],
   }
 
-  return json;
+  // return slots if date exists, else random ones
+  const slots = mockSlots[date] || ["09:00", "10:30", "13:00", "15:30"]
+
+  // Return mock response like real API would
+  return {
+    date,
+    available_slots: slots,
+  }
 }

@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function AboutJourney() {
   return (
     <section className="py-16 bg-white">
@@ -5,10 +7,14 @@ export default function AboutJourney() {
 
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center px-5">
         <div className="flex gap-4">
-          <img src="https://th.bing.com/th/id/OIP.Dyg0mkJB-1o5_Yt_rPC9YwHaEo?w=287&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3" alt="Journey1"
-            className="rounded-lg shadow-lg w-1/2 object-cover" />
-          <img src="https://th.bing.com/th/id/OIP.Dyg0mkJB-1o5_Yt_rPC9YwHaEo?w=287&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3" alt="Journey2"
-            className="rounded-lg shadow-lg w-1/2 object-cover" />
+          <div className="relative w-1/2 h-48">
+            <Image src="https://th.bing.com/th/id/OIP.Dyg0mkJB-1o5_Yt_rPC9YwHaEo?w=287&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3" alt="Journey1"
+              fill className="rounded-lg shadow-lg object-cover" />
+          </div>
+          <div className="relative w-1/2 h-48">
+            <Image src="https://th.bing.com/th/id/OIP.Dyg0mkJB-1o5_Yt_rPC9YwHaEo?w=287&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3" alt="Journey2"
+              fill className="rounded-lg shadow-lg object-cover" />
+          </div>
         </div>
 
         <div>

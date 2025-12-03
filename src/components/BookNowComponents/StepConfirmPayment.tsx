@@ -21,8 +21,8 @@ export default function StepConfirmPayment({ service, date, time }: Props) {
         appointment_datetime: `${date}T${time}`,
       })
       showToast(`Appointment confirmed! ID: ${res.appointment_id}`, 'success')
-    } catch (err: any) {
-      showToast(err.message || 'Booking failed', 'error')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Booking failed', 'error')
     } finally {
       setLoading(false)
     }

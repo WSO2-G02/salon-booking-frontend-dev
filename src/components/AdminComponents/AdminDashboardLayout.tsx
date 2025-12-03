@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarChart3, TrendingUp, Calendar, Scissors, Users, User, LogOut } from 'lucide-react'
-import AppointmentsSection from './AppointmentSection/AppointmentsSection'
 import ReportsAnalyticsTab from './ReportsAnalyticsTab'
-import ServicesManagementSection from './ServicesSection/ServicesManagementSection'
-import StaffManagementSection from './StaffSection/StaffManagementSection'
+import StaffManagementTab from './StaffManagementTab'
+import ServicesManagementTab from './ServicesManagementTab'
+import CustomersManagementTab from './CustomersManagementTab'
 
 type TabType = 'overview' | 'reports' | 'appointments' | 'services' | 'staff' | 'customers'
 
@@ -37,7 +37,7 @@ export default function AdminDashboardLayout() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-800">
-                AURORA Salon <span className="text-red-600">Admin</span>
+                Liyo Salon <span className="text-red-600">Admin</span>
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -93,21 +93,21 @@ export default function AdminDashboardLayout() {
 
           {activeTab === 'reports' && <ReportsAnalyticsTab />}
 
-          {activeTab === 'appointments' && <AppointmentsSection />}
-
-          {activeTab === 'services' && <ServicesManagementSection />}
-
-          {activeTab === "staff" && <StaffManagementSection />}
-
-          {activeTab === 'customers' && (
+          {activeTab === 'appointments' && (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="flex items-center justify-center mb-4">
-                <User size={32} className="text-red-600 mr-3" />
-                <h2 className="text-2xl font-bold text-gray-800">Customer Management</h2>
+                <Calendar size={32} className="text-red-600 mr-3" />
+                <h2 className="text-2xl font-bold text-gray-800">Appointments Management</h2>
               </div>
-              <p className="text-gray-600">Customers tab content will be implemented here.</p>
+              <p className="text-gray-600">Appointments tab content will be implemented here.</p>
             </div>
           )}
+
+          {activeTab === 'services' && <ServicesManagementTab />}
+
+          {activeTab === 'staff' && <StaffManagementTab />}
+
+          {activeTab === 'customers' && <CustomersManagementTab />}
         </div>
       </div>
     </div>
