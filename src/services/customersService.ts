@@ -210,7 +210,7 @@ export function getMockCustomersData(): UserListResponse[] {
     {
       id: 3,
       username: 'admin_user',
-      email: 'admin@liyosalon.com',
+      email: 'admin@aurorasalon.com',
       full_name: 'Admin User',
       user_type: 'admin',
       is_active: true,

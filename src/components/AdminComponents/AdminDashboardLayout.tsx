@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarChart3, TrendingUp, Calendar, Scissors, Users, User, LogOut } from 'lucide-react'
+import OverviewTab from './OverviewTab'
 import ReportsAnalyticsTab from './ReportsAnalyticsTab'
 import StaffManagementTab from './StaffManagementTab'
 import ServicesManagementTab from './ServicesManagementTab'
@@ -11,7 +12,7 @@ import CustomersManagementTab from './CustomersManagementTab'
 type TabType = 'overview' | 'reports' | 'appointments' | 'services' | 'staff' | 'customers'
 
 export default function AdminDashboardLayout() {
-  const [activeTab, setActiveTab] = useState<TabType>('reports')
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
   const router = useRouter()
 
   const handleLogout = () => {
@@ -37,7 +38,7 @@ export default function AdminDashboardLayout() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-800">
-                Liyo Salon <span className="text-red-600">Admin</span>
+                Aurora Salon <span className="text-red-600">Admin</span>
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -82,13 +83,7 @@ export default function AdminDashboardLayout() {
         {/* Tab Content */}
         <div className="min-h-[600px]">
           {activeTab === 'overview' && (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <BarChart3 size={32} className="text-red-600 mr-3" />
-                <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
-              </div>
-              <p className="text-gray-600">Overview tab content will be implemented here.</p>
-            </div>
+            <OverviewTab onTabChange={(tab) => setActiveTab(tab as TabType)} />
           )}
 
           {activeTab === 'reports' && <ReportsAnalyticsTab />}

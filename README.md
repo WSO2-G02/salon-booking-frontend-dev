@@ -79,11 +79,22 @@ The admin dashboard provides comprehensive management capabilities:
 
 | Tab | Description | Documentation |
 |-----|-------------|---------------|
-| **Reports & Analytics** | Revenue charts, service popularity, staff performance, business insights | [docs/admin-portal/reports-analytics/](./docs/admin-portal/reports-analytics/) |
+| **Overview** | Dashboard home with quick stats, today's schedule, recent activity, service health monitoring | [docs/admin-portal/overview/](./docs/admin-portal/overview/) |
+| **Reports & Analytics** | In-depth revenue charts, service popularity, staff performance, business insights with date filtering | [docs/admin-portal/reports-analytics/](./docs/admin-portal/reports-analytics/) |
 | **Staff Management** | Create, edit, deactivate staff; manage availability schedules | [docs/admin-portal/staff-management/](./docs/admin-portal/staff-management/) |
 | **Services Management** | Manage salon services, pricing, duration, and categories | [docs/admin-portal/services-management/](./docs/admin-portal/services-management/) |
 | **Customers Management** | View and manage customer accounts | [docs/admin-portal/customers-management/](./docs/admin-portal/customers-management/) |
 | **Appointments** | Appointment management (in development) | — |
+
+### Overview vs Reports & Analytics
+
+| Aspect | Overview | Reports & Analytics |
+|--------|----------|---------------------|
+| **Purpose** | Quick snapshot dashboard | Deep-dive analytical reports |
+| **Data Scope** | Today + summary stats | Custom date range analysis |
+| **Key Features** | Today's schedule, Recent activity, Service health, Quick actions | Revenue charts, Staff performance, Service popularity, Business insights |
+| **Use Case** | Daily operational check | Strategic planning & analysis |
+| **Date Filter** | Fixed (today/7 days) | Customizable date range picker |
 
 ---
 
@@ -170,6 +181,8 @@ For complete usage guide: [Toast Notification Guide](./docs/TOAST_NOTIFICATION_G
 |----------|-------------|
 | [Salon Microservices API Overview](./Salon_Microservices_API_Overview.md) | Complete backend API reference |
 | [Toast Notification Guide](./docs/TOAST_NOTIFICATION_GUIDE.md) | Toast component usage and examples |
+| [Overview Dashboard](./docs/admin-portal/overview/README.md) | Overview tab implementation guide |
+| [Reports & Analytics](./docs/admin-portal/reports-analytics/README.md) | Reports tab implementation guide |
 | [Staff Management](./docs/admin-portal/staff-management/README.md) | Staff tab implementation guide |
 | [Services Management](./docs/admin-portal/services-management/README.md) | Services tab implementation guide |
 | [Customers Management](./docs/admin-portal/customers-management/README.md) | Customers tab implementation guide |

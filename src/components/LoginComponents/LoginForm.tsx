@@ -243,6 +243,21 @@ export default function LoginForm() {
 
   const handleSubmit = loginType === 'user' ? handleUserLogin : handleAdminLogin;
 
+  // ============ DEV BYPASS - DELETE THIS BLOCK WHEN BACKEND IS READY ============
+  const handleDevBypass = (type: 'user' | 'admin') => {
+    const mockAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZXZ1c2VyIiwidXNlcl90eXBlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTk5OTl9.mock';
+    const mockRefreshToken = 'mock_refresh_token_dev';
+    Token.setLoginTokens(mockAccessToken, mockRefreshToken, 3600);
+    if (type === 'admin') {
+      localStorage.setItem('admin_token', 'mock_admin_token');
+    }
+    showToast(`Dev ${type} login!`, 'success');
+    setTimeout(() => {
+      window.location.href = type === 'admin' ? '/admin/dashboard' : '/profile';
+    }, 500);
+  };
+  // ============ END DEV BYPASS ============
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -294,6 +309,28 @@ export default function LoginForm() {
       />
 
       <SubmitButton text="Login" loading={loading} />
+
+      {/* ============ DEV BYPASS BUTTONS - DELETE THIS BLOCK WHEN BACKEND IS READY ============ */}
+      <div className="mt-4 p-3 bg-yellow-50 border-2 border-dashed border-yellow-400 rounded-md">
+        <p className="text-xs text-yellow-700 font-bold mb-2 text-center">⚠️ DEV BYPASS (Delete when ready)</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleDevBypass('user')}
+            className="flex-1 py-2 px-3 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+          >
+            Skip → User
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDevBypass('admin')}
+            className="flex-1 py-2 px-3 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+          >
+            Skip → Admin
+          </button>
+        </div>
+      </div>
+      {/* ============ END DEV BYPASS BUTTONS ============ */}
 
       {loginType === 'user' && (
         <p className="text-center mt-6 text-sm text-gray-600">

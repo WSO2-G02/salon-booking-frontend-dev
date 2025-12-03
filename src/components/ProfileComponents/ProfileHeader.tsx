@@ -14,14 +14,31 @@ interface Profile {
   user_type?: string;
 }
 
+// ============ DEV BYPASS MOCK DATA - DELETE WHEN BACKEND IS READY ============
+const MOCK_PROFILE: Profile = {
+  full_name: "Dev User",
+  username: "devuser",
+  is_verified: true,
+  email: "dev@example.com",
+  phone: "+94 77 123 4567",
+  user_type: "admin",
+};
+// ============ END DEV BYPASS MOCK DATA ============
+
 export default function ProfileHeader() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showEdit, setShowEdit] = useState(false);
 
   async function load() {
-    const res = await userApiFetch("/profile", { method: "GET" });
-    const data = await res.json();
-    setProfile(data);
+    try {
+      const res = await userApiFetch("/profile", { method: "GET" });
+      if (!res.ok) throw new Error("API failed");
+      const data = await res.json();
+      setProfile(data);
+    } catch {
+      // DEV BYPASS: Use mock data when API fails
+      setProfile(MOCK_PROFILE);
+    }
   }
 
   useEffect(() => {
