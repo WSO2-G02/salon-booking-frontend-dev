@@ -7,12 +7,11 @@ export default function AppointmentsPage() {
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
 
-      <div className="flex-1 container mx-auto px-4 py-1">
-        <h1 className="text-center text-2xl text-black font-bold mb-2">
+      <div className="flex-1 container mx-auto px-4 py-10">
+        <h1 className="text-center text-2xl font-bold mb-2">
           Select Your Appointment
         </h1>
-
-        <p className="text-center text-gray-700 font-semibold mb-8">
+        <p className="text-center text-gray-600 mb-8">
           Choose your desired service, pick a time, and confirm your booking.
         </p>
 
