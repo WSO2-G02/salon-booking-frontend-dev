@@ -1,11 +1,10 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { servicesApiFetch } from "@/lib/servicesApi";   // ✅ FIXED IMPORT
+import Image from 'next/image'
 
 interface Props {
-  onSelect: (service: string) => void;
-  selected: string;
+  onSelect: (service: string) => void
+  selected: string
 }
 
 export default function StepSelectService({ onSelect, selected }: Props) {
@@ -57,9 +56,9 @@ export default function StepSelectService({ onSelect, selected }: Props) {
       </p>
 
       <div className="flex flex-wrap justify-center gap-8">
-        {services.map((s: any) => (
+        {services.map((s) => (
           <div
-            key={s.id}
+            key={s.name}
             onClick={() => onSelect(s.name)}
             className={`cursor-pointer border rounded-lg p-3 w-60 shadow transform transition hover:scale-105  ${
               selected === s.name
@@ -82,5 +81,5 @@ export default function StepSelectService({ onSelect, selected }: Props) {
         ))}
       </div>
     </div>
-  );
+  )
 }

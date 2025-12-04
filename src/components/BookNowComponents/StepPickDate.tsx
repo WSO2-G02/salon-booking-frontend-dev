@@ -26,7 +26,7 @@ export default function StepPickDate({ onNext, prevData, staffId = "1", serviceI
       .then((res) => setSlots(res.available_slots))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [date])
+  }, [date, serviceId, staffId])
 
   return (
     <div className="flex flex-col items-center justify-center text-center relative py-10">

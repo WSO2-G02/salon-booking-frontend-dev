@@ -30,8 +30,8 @@ export default function RegisterForm() {
       showToast(`Registered successfully! Welcome, ${res.username || res.full_name}`, 'success')
       setForm({ email: '', username: '', password: '', full_name: '', phone: '' })
       setTimeout(() => (window.location.href = '/login'), 1500)
-    } catch (err: any) {
-      showToast(err.message || 'Registration failed', 'error')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Registration failed', 'error')
     } finally {
       setLoading(false)
     }

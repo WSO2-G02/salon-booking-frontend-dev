@@ -10,19 +10,23 @@
  * - Appointment status distribution
  * - Business insights with peak hours
  * 
- * API Endpoints Used:
- * - /api/v1/reports/revenue
- * - /api/v1/reports/service-popularity
- * - /api/v1/reports/appointments-summary
- * - /api/v1/reports/business-insights
+ * API Endpoints Used (via analyticsService):
+ * - GET /api/v1/analytics/revenue/summary
+ * - GET /api/v1/analytics/revenue/by-service
+ * - GET /api/v1/analytics/services/popularity
+ * - GET /api/v1/analytics/appointments/summary
+ * - GET /api/v1/analytics/staff/performance
+ * - GET /api/v1/analytics/appointments/peak-hours
+ * - GET /api/v1/analytics/customers/retention
  * 
  * @component
  */
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getAnalyticsData, type AnalyticsData } from '@/services/analyticsService'
+import { showToast } from '@/components/Toast'
 import { DollarSign, Calendar, Star, Users, Wifi, AlertCircle } from 'lucide-react'
 
 // Import chart components
@@ -59,28 +63,31 @@ export default function ReportsAnalyticsTab() {
   // =====================================================
   
   /**
-   * Fetch analytics data when date range changes
-   */
-  useEffect(() => {
-    loadData()
-  }, [dateRange])
-
-  /**
    * Load analytics data from API
    * Falls back to mock data if backend is unavailable
    */
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const analyticsData = await getAnalyticsData(dateRange.start, dateRange.end)
       setData(analyticsData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMessage)
+      showToast(errorMessage, 'error')
+      // getAnalyticsData already falls back to mock data internally
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange])
+
+  /**
+   * Fetch analytics data when date range changes
+   */
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   // =====================================================
   // LOADING STATE

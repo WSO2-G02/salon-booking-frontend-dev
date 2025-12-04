@@ -17,8 +17,8 @@ export async function apiClientFetch(
 ) {
   let token = await getValidAccessToken();
 
-  const headers: HeadersInit = {
-    ...(options.headers || {}),
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
     accept: "application/json",
   };
 
@@ -28,7 +28,7 @@ export async function apiClientFetch(
     headers["Content-Type"] = "application/json";
 
   // First request
-  let res = await fetch(`${baseUrl}${path}`, {
+  const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
   });
@@ -51,8 +51,8 @@ export async function apiClientFetch(
 
   if (!token) return res;
 
-  const retryHeaders: HeadersInit = {
-    ...(options.headers || {}),
+  const retryHeaders: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
     accept: "application/json",
     authorization: `Bearer ${token}`,
   };

@@ -23,10 +23,10 @@ export async function servicesApiFetch(
   const url = `${SERVICES_BASE}${path}`;
 
   // 1) Get a valid (refreshed if needed) access token
-  let access = await getValidAccessToken();
+  const access = await getValidAccessToken();
 
-  const headers: HeadersInit = {
-    ...(options.headers || {}),
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
   };
 
   if (access) {
@@ -38,7 +38,7 @@ export async function servicesApiFetch(
   }
 
   // 2) First attempt
-  let res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers });
 
   if (res.status !== 401) {
     return res;
@@ -51,21 +51,22 @@ export async function servicesApiFetch(
     return res;
   }
 
+  let newAccess: string | undefined;
   try {
     const refreshed = await refreshTokens();
-    access = refreshed.access_token as string | undefined;
+    newAccess = refreshed.access_token as string | undefined;
   } catch {
     // refreshTokens already cleared on failure
     return res;
   }
 
-  if (!access) {
+  if (!newAccess) {
     return res;
   }
 
-  const retryHeaders: HeadersInit = {
-    ...(options.headers || {}),
-    authorization: `Bearer ${access}`,
+  const retryHeaders: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
+    authorization: `Bearer ${newAccess}`,
   };
 
   if (options.method && options.method !== "GET") {

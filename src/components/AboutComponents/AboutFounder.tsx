@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function AboutFounder() {
   return (
     <section className="py-20 bg-gray-50">
@@ -23,11 +25,12 @@ export default function AboutFounder() {
           <p className="font-semibold text-gray-600">Founder, AURORA Salon (Pvt) Ltd</p>
         </div>
 
-        <div>
-          <img
+        <div className="relative w-full h-96">
+          <Image
             src="https://th.bing.com/th/id/R.198ae651258736878cb40d7477dc3f63?rik=xjNCNT9z3W6GBA&pid=ImgRaw&r=0"
             alt="Founder"
-            className="rounded-lg shadow-lg object-cover w-full"
+            fill
+            className="rounded-lg shadow-lg object-cover"
           />
         </div>
       </div>
