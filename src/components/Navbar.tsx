@@ -1,42 +1,13 @@
-"use client";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { log } from "console";
+'use client'
+import Link from 'next/link'
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const router = useRouter();
-
   const links = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Services", href: "/services" },
-    { name: "Contact", href: "/contact" },
-  ];
-
-  useEffect(() => {
-    // initialize
-
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("access_token")
-        : null;
-    console.log("Navbar token:", token);
-    setIsLoggedIn(!!token);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    // dispatch custom event to notify same-tab listeners
-    window.dispatchEvent(
-      new CustomEvent("localstorage-changed", {
-        detail: { key: "access_token", newValue: null },
-      })
-    );
-    setIsLoggedIn(false);
-    router.push("/login");
-  };
+    { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
+    { name: 'Services', href: '/services' },
+    { name: 'Contact', href: '/contact' },
+  ]
 
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-black text-white">
@@ -55,43 +26,23 @@ export default function Navbar() {
       </div>
 
       <div className="flex space-x-3">
-        {isLoggedIn ? (
-          <div className="flex items-center space-x-2">
-            <Link href="/booknow" className="flex items-center justify-center">
-              <button className="border border-white p-2 rounded hover:bg-white hover:text-black transition">
-                Book Now
-              </button>
-            </Link>
-          </div>
-        ) : (
-          <Link href="/login" className="flex items-center justify-center">
-            <button className="border border-white p-2 rounded hover:bg-white hover:text-black transition">
-              Book Now
-            </button>
-          </Link>
-        )}
-        {isLoggedIn ? (
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleLogout}
-              className="border border-white px-3 py-2 rounded hover:bg-white hover:text-black transition"
-            >
-              Logout
-            </button>
-            <Link href="/profile" className="flex items-center justify-center">
-              <button className="border border-white p-2 rounded hover:bg-white hover:text-black transition">
-                👤
-              </button>
-            </Link>
-          </div>
-        ) : (
-          <Link href="/login" className="flex items-center justify-center">
-            <button className="border border-white p-2 rounded hover:bg-white hover:text-black transition">
-              👤
-            </button>
-          </Link>
-        )}
+        <Link
+          href="/booknow"
+          className="flex items-center justify-center"
+        >
+        <button className="border border-white px-4 py-2 hover:bg-white hover:text-black transition">
+          BOOK NOW
+        </button>
+        </Link>
+        <Link
+          href="/login"
+          className="flex items-center justify-center"
+        >
+          <button className="border border-white p-2 rounded hover:bg-white hover:text-black transition">
+            👤
+          </button>
+        </Link>
       </div>
     </nav>
-  );
+  )
 }

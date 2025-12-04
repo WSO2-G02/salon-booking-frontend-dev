@@ -14,9 +14,6 @@ export default function StepConfirmPayment({ service, date, time }: Props) {
   const [loading, setLoading] = useState(false)
 
   const handleConfirm = async () => {
-    console.log(service)
-    console.log(date)
-    console.log(time)
     setLoading(true)
     try {
       const res = await bookAppointment({
