@@ -6,11 +6,11 @@ import { getAvailableSlots } from '@/services/appointmentService'
 interface Props {
   onNext: (data: { date: string; time: string }) => void
   prevData?: { date: string; time: string }
-  staffId?: number
-  serviceId?: number
+  staffId?: string
+  serviceId?: string
 }
 
-export default function StepPickDate({ onNext, prevData, staffId = 1, serviceId = 1 }: Props) {
+export default function StepPickDate({ onNext, prevData, staffId = "1", serviceId = "1" }: Props) {
   const [date, setDate] = useState(prevData?.date || '')
   const [selectedTime, setSelectedTime] = useState(prevData?.time || '')
   const [slots, setSlots] = useState<string[]>([])
@@ -57,7 +57,7 @@ export default function StepPickDate({ onNext, prevData, staffId = 1, serviceId 
 
           {error && <p className="text-red-500">{error}</p>}
 
-          {!loading && slots.length > 0 && (
+          {!loading && slots.length !== 0 && (
             <div className="grid grid-cols-3 gap-3 mt-4">
               {slots.map((slot) => (
                 <button
