@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import ProfileHeader from "@/components/ProfileComponents/ProfileHeader";
 import ProfileDetails from "@/components/ProfileComponents/ProfileDetails";
 import ProfileDangerZone from "@/components/ProfileComponents/ProfileDangerZone";
+import MyAppointments from "@/components/ProfileComponents/MyAppointements";
 
 export default function ProfilePage() {
   return (
@@ -13,8 +14,9 @@ export default function ProfilePage() {
       {/* Main Profile Sections */}
       <ProfileHeader />
       <ProfileDetails />
-      <ProfileDangerZone />
 
+      <MyAppointments />
+      <ProfileDangerZone />
       <Footer />
     </>
   );

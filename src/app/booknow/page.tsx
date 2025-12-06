@@ -8,7 +8,7 @@ export default function AppointmentsPage() {
       <Navbar />
 
       <div className="flex-1 container mx-auto px-4 py-10">
-        <h1 className="text-center text-2xl font-bold mb-2">
+        <h1 className="text-center text-black text-2xl font-bold mb-2">
           Select Your Appointment
         </h1>
         <p className="text-center text-gray-600 mb-8">

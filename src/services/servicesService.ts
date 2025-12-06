@@ -17,7 +17,7 @@
  * @module servicesService
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_SERVICES_API_BASE
+const API_BASE = process.env.NEXT_PUBLIC_SERVICES_API_BASE || "https://services-management.azurewebsites.net";
 
 // =====================================================
 // TYPE DEFINITIONS - Matching Backend Pydantic Schemas

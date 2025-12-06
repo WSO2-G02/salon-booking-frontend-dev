@@ -1,0 +1,227 @@
+"use client";
+
+import {
+  Edit,
+  Trash2,
+  Calendar,
+  User,
+  Briefcase,
+  Clock,
+  Scissors,
+  Lightbulb,
+} from "lucide-react";
+
+import { getUserAppointments } from "@/services/appointmentService";
+import { getUserProfile } from "@/services/userService";
+import { useEffect, useState } from "react";
+
+export default function MyAppointments() {
+  const [appointmentsList, setAppointmentsList] = useState<any[]>([]);
+  const [userID, setUserID] = useState<number>();
+
+  const dummyAppointments = [
+    {
+      id: 1,
+      user_id: 1,
+      service: "Haircut",
+      staff_id: 2,
+      appointment_datetime: "2024-07-15T10:00:00",
+      price: 1500,
+      status: "Active",
+      is_active: true,
+    },
+    {
+      id: 2,
+      user_id: 1,
+      service: "Manicure",
+      staff_id: 3,
+      appointment_datetime: "2024-07-16T14:00:00",
+      price: 2000,
+      status: "Active",
+      is_active: true,
+    },
+    {
+      id: 3,
+      user_id: 1,
+      service: "Pedicure",
+      staff_id: 4,
+      appointment_datetime: "2024-07-17T16:00:00",
+      price: 2500,
+      status: "Active",
+      is_active: true,
+    },
+  ];
+
+  useEffect(() => {
+    // Fetch user appointments on component mount
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await getUserProfile();
+        setUserID(profile.id);
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
+      }
+    };
+    fetchUserProfile();
+    const fetchAppointments = async () => {
+      try {
+        const response = await getUserAppointments(userID!);
+        setAppointmentsList(response);
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+      }
+    };
+    fetchAppointments();
+  }, []);
+
+  const handleCancelAppointment = (appointmentId: number) => {
+    // Implement cancellation logic here
+    console.log(`Cancel appointment with ID: ${appointmentId}`);
+  };
+
+  // Empty state
+  if (dummyAppointments.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+        <User size={48} className="mx-auto text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+          No Appointments{" "}
+        </h3>
+        <p className="text-gray-500">
+          Let's get started by booking your first appointment!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden p-8">
+      <h2 className="text-2xl font-bold mb-6 text-gray-700">My Appointments</h2>
+      {/* ================================================= */}
+      {/* TABLE CONTAINER                                  */}
+      {/* ================================================= */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          {/* Table Header */}
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Appointment ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Service
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Staff ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Date and Time
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
+          {/* Table Body */}
+          <tbody className="bg-white divide-y divide-gray-200">
+            {dummyAppointments.map((appointment) => (
+              <tr
+                key={appointment.id}
+                className={`hover:bg-gray-50 transition-colors ${
+                  !appointment.is_active ? "opacity-60" : ""
+                }`}
+              >
+                {/* Appointment ID & Info */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <Scissors size={20} className="text-red-600" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-s text-gray-500">
+                        ID: {appointment.id}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+
+                {/* Service */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center text-sm text-gray-900">
+                    <Lightbulb size={14} className="mr-2 text-gray-400" />
+                    {appointment.service}
+                  </div>
+                </td>
+
+                {/* Staff ID */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center text-sm text-gray-900">
+                    <Briefcase size={14} className="mr-2 text-gray-400" />
+                    {appointment.staff_id}
+                  </div>
+                </td>
+
+                {/* Date and Time */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center text-sm text-gray-700">
+                    <Clock size={14} className="mr-2 text-gray-400" />
+                    <div>
+                      {new Date(
+                        appointment.appointment_datetime
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                </td>
+
+                {/* Price */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {appointment.price} LKR
+                </td>
+
+                {/* Status Badge */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      appointment.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {appointment.status === "Active" ? "Active" : "Inactive"}
+                  </span>
+                </td>
+
+                {/* Action Buttons */}
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end space-x-2">
+                    {/* cancel appointment */}
+
+                    <button
+                      onClick={() => handleCancelAppointment(appointment.id)}
+                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Cancel Appointment"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ================================================= */}
+      {/* PAGINATION                                       */}
+      {/* ================================================= */}
+      <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200"></div>
+    </div>
+  );
+}

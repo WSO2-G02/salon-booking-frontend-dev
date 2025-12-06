@@ -14,7 +14,7 @@ export default function ProfileDangerZone() {
   return (
     <section className="py-16 bg-white">
       <div className="max-w-5xl mx-auto px-6">
-        <h2 className="text-2xl font-bold mb-8">Account</h2>
+        {/* <h2 className="text-2xl font-bold mb-8">Account</h2> */}
 
         <div className="p-6 border rounded-xl shadow-sm bg-slate-50">
           <div className="flex items-center justify-between">
