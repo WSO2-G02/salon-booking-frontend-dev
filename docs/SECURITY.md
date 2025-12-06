@@ -1,27 +1,29 @@
-# 🔐 Security Policy
+# Security Policy
 
 ## Overview
 
-This document outlines the security practices, vulnerability management, and incident response procedures for the Salon Booking Frontend application.
+This document defines the security practices, vulnerability management procedures, and incident response protocols for the Salon Booking Frontend application.
 
 ## Security Architecture
 
+The following diagram illustrates the security controls implemented across the development lifecycle:
+
 ```mermaid
 flowchart TB
-    subgraph Development["👨‍💻 Development"]
+    subgraph Development["Development Phase"]
         code["Source Code"]
         deps["Dependencies"]
         secrets["Secrets Management"]
     end
 
-    subgraph Pipeline["🔄 CI/CD Pipeline"]
-        eslint["ESLint\n(Code Quality)"]
-        codeql["CodeQL\n(SAST)"]
-        npm_audit["npm audit\n(Dependency Scan)"]
-        trivy["Trivy\n(Container Scan)"]
+    subgraph Pipeline["CI/CD Pipeline"]
+        eslint["ESLint"]
+        codeql["CodeQL SAST"]
+        npm_audit["npm audit"]
+        trivy["Trivy Scanner"]
     end
 
-    subgraph Runtime["🏃 Runtime"]
+    subgraph Runtime["Runtime Environment"]
         container["Container"]
         k8s["Kubernetes"]
         istio["Istio Service Mesh"]
@@ -32,102 +34,94 @@ flowchart TB
     deps --> npm_audit
     container --> trivy
     
-    eslint & codeql & npm_audit --> build["✅ Build"]
+    eslint & codeql & npm_audit --> build["Build Stage"]
     build --> trivy
-    trivy --> deploy["🚀 Deploy"]
+    trivy --> deploy["Deployment"]
     deploy --> Runtime
-
-    classDef dev fill:#e3f2fd,stroke:#1565c0
-    classDef pipe fill:#fff3e0,stroke:#e65100
-    classDef run fill:#e8f5e9,stroke:#2e7d32
-
-    class code,deps,secrets dev
-    class eslint,codeql,npm_audit,trivy pipe
-    class container,k8s,istio run
 ```
 
 ## Vulnerability Management
 
-### Scanning Schedule
+### Security Scanning Schedule
 
 ```mermaid
 gantt
     title Security Scan Schedule
-    dateFormat  YYYY-MM-DD
-    section Continuous
-    CodeQL (on push)         :active, codeql, 2024-01-01, 365d
-    Trivy (on build)         :active, trivy, 2024-01-01, 365d
-    section Weekly
-    npm audit                :weekly, 2024-01-01, 365d
-    Dependency scan          :weekly, 2024-01-01, 365d
+    dateFormat YYYY-MM-DD
+    section Continuous Scans
+    CodeQL Analysis           :active, codeql, 2024-01-01, 365d
+    Trivy Container Scan      :active, trivy, 2024-01-01, 365d
+    section Scheduled Scans
+    npm Dependency Audit      :weekly, 2024-01-01, 365d
+    Full Dependency Review    :weekly, 2024-01-01, 365d
 ```
 
 | Scan Type | Frequency | Tool | Trigger |
 |-----------|-----------|------|---------|
-| Static Analysis (SAST) | Every push | CodeQL | CI/CD Pipeline |
-| Dependency Scan | Every push | npm audit | CI/CD Pipeline |
-| Container Scan | Every build | Trivy | CI/CD Pipeline |
-| Weekly Audit | Weekly | npm audit | Scheduled workflow |
+| Static Application Security Testing | Every push | CodeQL | CI/CD Pipeline |
+| Dependency Vulnerability Scan | Every push | npm audit | CI/CD Pipeline |
+| Container Image Scan | Every build | Trivy | CI/CD Pipeline |
+| Scheduled Dependency Audit | Weekly | npm audit | Scheduled workflow |
 
-### Severity Levels
+### Severity Classification and Response
 
 ```mermaid
-pie title Vulnerability Response Priority
-    "Critical (24h)" : 10
-    "High (72h)" : 20
-    "Medium (1 week)" : 30
-    "Low (1 month)" : 40
+pie title Vulnerability Response Time Distribution
+    "Critical - 24 hours" : 10
+    "High - 72 hours" : 20
+    "Medium - 7 days" : 30
+    "Low - 30 days" : 40
 ```
 
-| Severity | Response Time | Action Required |
+| Severity | Response Time | Required Action |
 |----------|---------------|-----------------|
-| **Critical** | 24 hours | Immediate patch, production deployment |
-| **High** | 72 hours | Priority patch, next release |
-| **Medium** | 1 week | Scheduled patch, regular release |
-| **Low** | 1 month | Evaluate and address in maintenance |
+| Critical | 24 hours | Immediate patch and production deployment |
+| High | 72 hours | Priority patch in next release |
+| Medium | 7 days | Scheduled patch in regular release cycle |
+| Low | 30 days | Evaluation and resolution during maintenance |
 
-### Vulnerability Workflow
+### Vulnerability Remediation Workflow
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Detected: Scan finds vulnerability
-    Detected --> Triaged: Security team reviews
-    Triaged --> Investigating: Assess impact
-    Investigating --> InProgress: Fix assigned
-    InProgress --> Testing: Fix developed
-    Testing --> Resolved: Fix verified
+    [*] --> Detected: Security scan identifies vulnerability
+    Detected --> Triaged: Security review initiated
+    Triaged --> Investigating: Impact assessment in progress
+    Investigating --> InProgress: Remediation assigned
+    InProgress --> Testing: Fix implementation complete
+    Testing --> Resolved: Fix verification successful
     Resolved --> [*]: Deployed to production
     
-    Investigating --> WontFix: Risk accepted
-    WontFix --> [*]: Document decision
+    Investigating --> Accepted: Risk acceptance decision
+    Accepted --> [*]: Decision documented
 ```
 
 ## Security Controls
 
-### 1. Code Security
+### Code Security
 
 ```mermaid
 flowchart LR
     subgraph Controls["Code Security Controls"]
-        lint["ESLint Rules"]
-        ts["TypeScript\nStrict Mode"]
-        review["Code Review"]
+        lint["ESLint Security Rules"]
+        ts["TypeScript Strict Mode"]
+        review["Mandatory Code Review"]
         codeql["CodeQL Analysis"]
     end
     
-    lint --> quality["Code Quality"]
-    ts --> safety["Type Safety"]
-    review --> oversight["Human Oversight"]
-    codeql --> vuln["Vulnerability Detection"]
+    lint --> quality["Code Quality Enforcement"]
+    ts --> safety["Type Safety Verification"]
+    review --> oversight["Peer Review Process"]
+    codeql --> detection["Vulnerability Detection"]
 ```
 
-**ESLint Security Rules**:
-- No `eval()` or `Function()` constructors
-- No `dangerouslySetInnerHTML` without review
-- Enforce HTTPS for external URLs
-- Prevent regex DoS patterns
+**ESLint Security Rules**
+- Prohibition of eval() and Function() constructors
+- Review requirement for dangerouslySetInnerHTML usage
+- HTTPS enforcement for external resource URLs
+- Regular expression denial-of-service pattern prevention
 
-**TypeScript Configuration**:
+**TypeScript Configuration**
 ```typescript
 {
   "compilerOptions": {
@@ -138,98 +132,99 @@ flowchart LR
 }
 ```
 
-### 2. Dependency Security
+### Dependency Security
 
 ```mermaid
 flowchart TB
-    subgraph Process["Dependency Management"]
-        lockfile["package-lock.json\n(Locked versions)"]
-        audit["npm audit\n(Vulnerability check)"]
-        update["Regular updates"]
-        review["Dependency review"]
+    subgraph DependencyManagement["Dependency Management Process"]
+        lockfile["package-lock.json"]
+        audit["npm audit"]
+        update["Regular Updates"]
+        review["Dependency Review"]
     end
     
     lockfile --> reproducible["Reproducible Builds"]
-    audit --> secure["Secure Dependencies"]
-    update --> current["Up-to-date"]
-    review --> minimal["Minimal Attack Surface"]
+    audit --> secure["Vulnerability Detection"]
+    update --> current["Current Dependencies"]
+    review --> minimal["Attack Surface Minimization"]
 ```
 
-**Best Practices**:
-- Use `npm ci` for CI/CD builds
-- Lock file committed to repository
-- Regular dependency updates
-- Review new dependencies before adding
+**Best Practices**
+- Use npm ci for deterministic CI/CD builds
+- Commit lock files to version control
+- Maintain regular dependency update schedule
+- Review all new dependencies prior to addition
 
-### 3. Container Security
+### Container Security
 
 ```mermaid
 flowchart TB
-    subgraph Dockerfile["Dockerfile Security"]
-        base["Alpine Base\n(Minimal OS)"]
-        nonroot["Non-root User"]
-        minimal["No dev dependencies"]
-        standalone["Standalone output"]
+    subgraph DockerSecurity["Dockerfile Security Measures"]
+        base["Alpine Base Image"]
+        nonroot["Non-root User Execution"]
+        minimal["Production Dependencies Only"]
+        standalone["Standalone Output Mode"]
+    end
+
+    subgraph ContainerScanning["Container Scanning"]
+        os["OS Package Vulnerabilities"]
+        libs["Library Vulnerabilities"]
+        secrets["Secret Detection"]
+        misconfig["Misconfiguration Detection"]
     end
     
-    subgraph Scan["Container Scanning"]
-        os["OS vulnerabilities"]
-        libs["Library vulnerabilities"]
-        secrets["Secret detection"]
-        misconfig["Misconfigurations"]
-    end
-    
-    Dockerfile --> Scan
-    Scan --> |Pass| deploy["✅ Deploy"]
-    Scan --> |Fail| fix["🔧 Fix Required"]
+    DockerSecurity --> ContainerScanning
+    ContainerScanning --> |"Scan Passed"| deploy["Proceed to Deployment"]
+    ContainerScanning --> |"Scan Failed"| remediate["Remediation Required"]
 ```
 
-**Dockerfile Best Practices**:
+**Dockerfile Security Practices**
 ```dockerfile
-# Use specific version tags
+# Specify exact version tags
 FROM node:20-alpine
 
-# Run as non-root user
+# Execute as non-root user
 USER nextjs
 
-# Use standalone output
-# Minimize installed packages
+# Use standalone output mode
+# Include production dependencies only
 ```
 
-### 4. Secrets Management
+### Secrets Management
 
 ```mermaid
 flowchart LR
-    subgraph Secrets["Secret Sources"]
+    subgraph SecretSources["Secret Storage"]
         gh["GitHub Secrets"]
         env["Environment Variables"]
     end
     
-    subgraph Usage["Secret Usage"]
+    subgraph SecretUsage["Secret Usage"]
         aws["AWS Credentials"]
         gitops["GitOps Token"]
         api["API Keys"]
     end
     
-    subgraph Protection["Protection"]
-        rotate["Regular Rotation"]
-        audit["Access Audit"]
+    subgraph SecretProtection["Protection Measures"]
+        rotate["Rotation Policy"]
+        audit["Access Auditing"]
         minimal["Least Privilege"]
     end
     
-    Secrets --> Usage --> Protection
+    SecretSources --> SecretUsage --> SecretProtection
 ```
 
-**Required Secrets**:
-| Secret | Purpose | Rotation |
-|--------|---------|----------|
-| AWS_ACCESS_KEY_ID | ECR access | 90 days |
-| AWS_SECRET_ACCESS_KEY | ECR access | 90 days |
-| GITOPS_TOKEN | Repository access | 90 days |
+**Secret Rotation Schedule**
 
-## Security Headers
+| Secret | Purpose | Rotation Interval |
+|--------|---------|-------------------|
+| AWS_ACCESS_KEY_ID | ECR Authentication | 90 days |
+| AWS_SECRET_ACCESS_KEY | ECR Authentication | 90 days |
+| GITOPS_TOKEN | Repository Access | 90 days |
 
-The Next.js application should configure security headers:
+## Security Headers Configuration
+
+The Next.js application should implement the following security headers:
 
 ```typescript
 // next.config.ts
@@ -267,71 +262,71 @@ const securityHeaders = [
 
 ```mermaid
 sequenceDiagram
-    participant Detection
-    participant Triage
-    participant Response
-    participant Recovery
-    participant Review
+    participant Detection as Detection System
+    participant Triage as Triage Team
+    participant Response as Response Team
+    participant Recovery as Recovery Team
+    participant Review as Review Board
 
-    Detection->>Triage: Alert received
-    Triage->>Triage: Assess severity
-    Triage->>Response: Assign responder
-    Response->>Response: Investigate
-    Response->>Response: Contain threat
-    Response->>Recovery: Implement fix
-    Recovery->>Recovery: Deploy patch
-    Recovery->>Review: Document incident
-    Review->>Review: Post-mortem
-    Review->>Detection: Update monitoring
+    Detection->>Triage: Security alert received
+    Triage->>Triage: Assess severity level
+    Triage->>Response: Assign incident responder
+    Response->>Response: Conduct investigation
+    Response->>Response: Implement containment
+    Response->>Recovery: Execute remediation
+    Recovery->>Recovery: Deploy fix to production
+    Recovery->>Review: Submit incident documentation
+    Review->>Review: Conduct post-mortem analysis
+    Review->>Detection: Update detection mechanisms
 ```
 
-### Incident Severity
+### Incident Priority Levels
 
-| Level | Description | Response |
-|-------|-------------|----------|
-| P1 | Data breach, service compromise | Immediate escalation |
-| P2 | Active exploitation attempt | Same-day response |
-| P3 | Vulnerability discovered | Next business day |
-| P4 | Security improvement | Scheduled work |
+| Priority | Description | Response Requirement |
+|----------|-------------|----------------------|
+| P1 | Data breach or service compromise | Immediate escalation to leadership |
+| P2 | Active exploitation attempt detected | Same-day response required |
+| P3 | Vulnerability identified | Response within next business day |
+| P4 | Security improvement opportunity | Scheduled maintenance window |
 
-## Compliance
+## Compliance Checklist
 
-### Security Checklist
+| Requirement | Status |
+|-------------|--------|
+| CodeQL analysis enabled | Required |
+| npm audit integrated in CI/CD pipeline | Required |
+| Trivy container scanning enabled | Required |
+| Secrets stored in GitHub Secrets | Required |
+| Branch protection rules configured | Required |
+| Mandatory code review enabled | Required |
+| Security headers configured | Required |
+| HTTPS enforcement | Required |
+| Regular dependency updates scheduled | Required |
 
-- [ ] CodeQL analysis enabled
-- [ ] npm audit in CI/CD pipeline
-- [ ] Trivy container scanning
-- [ ] Secrets stored in GitHub Secrets
-- [ ] Branch protection enabled
-- [ ] Code review required
-- [ ] Security headers configured
-- [ ] HTTPS enforced
-- [ ] Regular dependency updates
+## Vulnerability Reporting
 
-## Reporting Vulnerabilities
+### Responsible Disclosure Process
 
-### Responsible Disclosure
+Security vulnerabilities should be reported through the following process:
 
-If you discover a security vulnerability:
-
-1. **Do NOT** create a public GitHub issue
-2. Email security concerns to the repository maintainers
-3. Include detailed reproduction steps
-4. Allow reasonable time for response
+1. Do not create public GitHub issues for security vulnerabilities
+2. Contact repository maintainers directly via email
+3. Provide detailed reproduction steps and impact assessment
+4. Allow reasonable time for investigation and response
 
 ### Response Timeline
 
-| Action | Timeline |
-|--------|----------|
-| Initial response | 24 hours |
+| Action | Expected Timeline |
+|--------|-------------------|
+| Initial acknowledgment | 24 hours |
 | Severity assessment | 48 hours |
-| Fix timeline | Based on severity |
-| Public disclosure | After fix deployed |
+| Remediation timeline | Based on severity assessment |
+| Public disclosure | Following successful deployment of fix |
 
 ## References
 
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Next.js Security](https://nextjs.org/docs/advanced-features/security-headers)
+- [OWASP Top 10 Web Application Security Risks](https://owasp.org/www-project-top-ten/)
+- [Next.js Security Headers Documentation](https://nextjs.org/docs/advanced-features/security-headers)
 - [npm Security Best Practices](https://docs.npmjs.com/security)
 - [Trivy Documentation](https://aquasecurity.github.io/trivy/)
 - [CodeQL Documentation](https://codeql.github.com/docs/)

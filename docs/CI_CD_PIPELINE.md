@@ -1,72 +1,74 @@
-# 🚀 CI/CD Pipeline Documentation
+# CI/CD Pipeline Documentation
 
 ## Overview
 
-The Salon Booking Frontend CI/CD pipeline automates the build, test, security scanning, and deployment process. It ensures code quality, security compliance, and reliable deployments to AWS EKS via GitOps.
+This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for the Salon Booking Frontend application. The pipeline automates code quality verification, security scanning, container image building, and deployment to AWS EKS through GitOps practices.
 
 ## Pipeline Architecture
 
+The following diagram illustrates the complete CI/CD pipeline flow:
+
 ```mermaid
 flowchart TB
-    subgraph Triggers["🎯 Pipeline Triggers"]
-        push["Push to main/dev"]
+    subgraph Triggers["Pipeline Triggers"]
+        push["Push Event"]
         pr["Pull Request"]
         manual["Manual Dispatch"]
     end
 
-    subgraph Stage1["📝 Stage 1: Lint & Type Check"]
-        checkout1["Checkout Code"]
+    subgraph Stage1["Stage 1: Code Quality"]
+        checkout1["Checkout Repository"]
         setup_node1["Setup Node.js 20"]
-        install1["npm ci"]
-        eslint["ESLint"]
-        tsc["TypeScript Check"]
+        install1["Install Dependencies"]
+        eslint["Execute ESLint"]
+        tsc["TypeScript Validation"]
     end
 
-    subgraph Stage2["🧪 Stage 2: Unit Tests"]
-        checkout2["Checkout Code"]
-        install2["npm ci"]
-        jest["Jest Tests"]
-        coverage["Coverage Report"]
+    subgraph Stage2["Stage 2: Unit Testing"]
+        checkout2["Checkout Repository"]
+        install2["Install Dependencies"]
+        jest["Execute Jest Tests"]
+        coverage["Generate Coverage Report"]
     end
 
-    subgraph Stage3["🔐 Stage 3: Security Scan"]
-        checkout3["Checkout Code"]
-        npm_audit["npm audit"]
-        codeql_init["CodeQL Init"]
-        codeql_analyze["CodeQL Analysis"]
+    subgraph Stage3["Stage 3: Security Analysis"]
+        checkout3["Checkout Repository"]
+        npm_audit["Dependency Audit"]
+        codeql_init["Initialize CodeQL"]
+        codeql_analyze["Execute CodeQL Analysis"]
     end
 
-    subgraph Stage4["🏗️ Stage 4: Build"]
-        checkout4["Checkout Code"]
-        buildx["Docker Buildx"]
-        meta["Generate Tags"]
-        docker_build["Build Image"]
-        save_image["Save Artifact"]
+    subgraph Stage4["Stage 4: Container Build"]
+        checkout4["Checkout Repository"]
+        buildx["Configure Docker Buildx"]
+        meta["Generate Image Metadata"]
+        docker_build["Build Container Image"]
+        save_image["Archive Image Artifact"]
     end
 
-    subgraph Stage5["🛡️ Stage 5: Trivy Scan"]
-        load_image["Load Image"]
-        trivy_sarif["Trivy SARIF"]
-        trivy_table["Trivy Table"]
-        upload_sarif["Upload Results"]
+    subgraph Stage5["Stage 5: Container Security"]
+        load_image["Load Image Artifact"]
+        trivy_sarif["Trivy SARIF Scan"]
+        trivy_table["Trivy Table Report"]
+        upload_sarif["Upload Security Results"]
     end
 
-    subgraph Stage6["📦 Stage 6: Push to ECR"]
-        aws_creds["AWS Credentials"]
-        ecr_login["ECR Login"]
-        docker_push["Push Image"]
+    subgraph Stage6["Stage 6: Registry Push"]
+        aws_creds["Configure AWS Credentials"]
+        ecr_login["Authenticate to ECR"]
+        docker_push["Push Container Image"]
     end
 
-    subgraph Stage7["🔄 Stage 7: GitOps Update"]
-        clone_gitops["Clone GitOps Repo"]
-        update_manifest["Update Manifest"]
-        git_push["Commit & Push"]
+    subgraph Stage7["Stage 7: GitOps Deployment"]
+        clone_gitops["Clone GitOps Repository"]
+        update_manifest["Update Kubernetes Manifest"]
+        git_push["Commit and Push Changes"]
     end
 
-    subgraph Outputs["✅ Outputs"]
-        ecr["AWS ECR"]
-        argocd["ArgoCD Sync"]
-        eks["EKS Deployment"]
+    subgraph Outputs["Deployment Targets"]
+        ecr["AWS ECR Registry"]
+        argocd["ArgoCD Controller"]
+        eks["Amazon EKS Cluster"]
     end
 
     push & pr & manual --> Stage1
@@ -80,202 +82,204 @@ flowchart TB
     Stage7 --> ecr
     ecr --> argocd
     argocd --> eks
-
-    classDef trigger fill:#e1f5fe,stroke:#01579b
-    classDef lint fill:#fff3e0,stroke:#e65100
-    classDef test fill:#e8f5e9,stroke:#2e7d32
-    classDef security fill:#fce4ec,stroke:#c2185b
-    classDef build fill:#f3e5f5,stroke:#7b1fa2
-    classDef scan fill:#fff8e1,stroke:#f57f17
-    classDef push fill:#e0f2f1,stroke:#00695c
-    classDef gitops fill:#e8eaf6,stroke:#303f9f
-    classDef output fill:#f1f8e9,stroke:#558b2f
-
-    class push,pr,manual trigger
-    class checkout1,setup_node1,install1,eslint,tsc lint
-    class checkout2,install2,jest,coverage test
-    class checkout3,npm_audit,codeql_init,codeql_analyze security
-    class checkout4,buildx,meta,docker_build,save_image build
-    class load_image,trivy_sarif,trivy_table,upload_sarif scan
-    class aws_creds,ecr_login,docker_push push
-    class clone_gitops,update_manifest,git_push gitops
-    class ecr,argocd,eks output
 ```
 
 ## Pipeline Stages
 
-### Stage 1: Lint & Type Check
+### Stage 1: Code Quality
 
-**Purpose**: Ensure code quality and TypeScript type safety.
+This stage validates code quality and TypeScript type correctness.
 
 | Step | Description | Tool |
 |------|-------------|------|
-| Checkout | Clone repository | actions/checkout@v4 |
-| Setup Node.js | Install Node.js 20 | actions/setup-node@v4 |
-| Install deps | Install npm packages | npm ci |
-| ESLint | Run linting rules | eslint |
-| Type check | Verify TypeScript types | tsc --noEmit |
+| Checkout Repository | Clone source code | actions/checkout@v4 |
+| Setup Node.js | Configure Node.js 20 runtime | actions/setup-node@v4 |
+| Install Dependencies | Install npm packages | npm ci |
+| Execute ESLint | Validate code against linting rules | ESLint |
+| TypeScript Validation | Verify type correctness | tsc --noEmit |
 
-### Stage 2: Unit Tests
+### Stage 2: Unit Testing
 
-**Purpose**: Validate application logic and measure code coverage.
+This stage executes the test suite and generates coverage metrics.
 
 ```mermaid
 flowchart LR
-    subgraph Tests["Jest Test Suite"]
+    subgraph TestExecution["Test Execution"]
         components["Component Tests"]
         lib["Library Tests"]
-        hooks["Hook Tests"]
+        hooks["Custom Hook Tests"]
     end
     
-    subgraph Coverage["Coverage Report"]
-        statements["Statements"]
-        branches["Branches"]
-        functions["Functions"]
-        lines["Lines"]
+    subgraph CoverageMetrics["Coverage Metrics"]
+        statements["Statement Coverage"]
+        branches["Branch Coverage"]
+        functions["Function Coverage"]
+        lines["Line Coverage"]
     end
     
-    Tests --> Coverage
-    Coverage --> artifact["📦 Artifact Upload"]
+    TestExecution --> CoverageMetrics
+    CoverageMetrics --> artifact["Artifact Storage"]
 ```
 
-| Metric | Target |
-|--------|--------|
-| Statement Coverage | ≥80% |
-| Branch Coverage | ≥70% |
-| Function Coverage | ≥80% |
-| Line Coverage | ≥80% |
+**Coverage Thresholds**
 
-### Stage 3: Security Scan (SAST)
+| Metric | Minimum Threshold |
+|--------|-------------------|
+| Statement Coverage | 50% |
+| Branch Coverage | 50% |
+| Function Coverage | 50% |
+| Line Coverage | 50% |
 
-**Purpose**: Identify security vulnerabilities in code and dependencies.
+### Stage 3: Security Analysis (SAST)
+
+This stage performs static application security testing on the codebase.
 
 ```mermaid
 flowchart TB
-    subgraph SAST["Security Analysis"]
-        npm_audit["npm audit\n(Dependency Scan)"]
-        codeql["CodeQL\n(Static Analysis)"]
+    subgraph SecurityTools["Security Analysis Tools"]
+        npm_audit["npm audit"]
+        codeql["CodeQL Engine"]
     end
     
-    npm_audit --> findings1["Vulnerability Report"]
-    codeql --> findings2["SARIF Report"]
+    npm_audit --> dep_report["Dependency Report"]
+    codeql --> sarif_report["SARIF Report"]
     
-    findings1 --> review["Security Review"]
-    findings2 --> review
-    review --> |"Critical/High"| block["❌ Block Pipeline"]
-    review --> |"Medium/Low"| continue["✅ Continue"]
+    dep_report --> evaluation["Security Evaluation"]
+    sarif_report --> evaluation
+    
+    evaluation --> |"Critical or High Severity"| pipeline_blocked["Pipeline Blocked"]
+    evaluation --> |"Medium or Low Severity"| pipeline_continues["Pipeline Continues"]
 ```
 
-**Security Tools**:
-- **npm audit**: Scans dependencies for known vulnerabilities
-- **CodeQL**: Static analysis for JavaScript/TypeScript security patterns
+**Security Tools**
 
-### Stage 4: Build Docker Image
+| Tool | Purpose |
+|------|---------|
+| npm audit | Scans npm dependencies for known vulnerabilities |
+| CodeQL | Static analysis engine for JavaScript/TypeScript security patterns |
 
-**Purpose**: Create optimized, production-ready container image.
+### Stage 4: Container Build
+
+This stage creates an optimized, production-ready container image.
 
 ```mermaid
 flowchart LR
-    subgraph Build["Multi-Stage Build"]
-        base["Base: node:20-alpine"]
-        deps["Install Dependencies"]
-        builder["Build Next.js"]
-        runner["Production Image"]
+    subgraph MultistageBuild["Multi-Stage Docker Build"]
+        base["Base Image: node:20-alpine"]
+        deps["Dependency Installation"]
+        builder["Next.js Build Process"]
+        runner["Production Runtime Image"]
     end
     
     base --> deps --> builder --> runner
     
-    runner --> tag["Image Tag:\n{sha}-{timestamp}"]
-    tag --> artifact["Save as Artifact"]
+    runner --> tag["Image Tag Generation"]
+    tag --> artifact["Artifact Storage"]
 ```
 
-**Dockerfile Features**:
-- Multi-stage build for smaller image size
-- Standalone output mode for optimal production deployment
-- Non-root user for security
-- Alpine base image for minimal attack surface
+**Container Image Specifications**
 
-### Stage 5: Trivy Security Scan
+| Attribute | Value |
+|-----------|-------|
+| Base Image | node:20-alpine |
+| Build Type | Multi-stage |
+| Output Mode | Standalone |
+| Runtime User | Non-root (nextjs) |
+| Exposed Port | 3000 |
 
-**Purpose**: Scan container image for vulnerabilities before deployment.
+### Stage 5: Container Security Scan
+
+This stage scans the container image for vulnerabilities prior to deployment.
 
 ```mermaid
 flowchart TB
-    subgraph Trivy["Trivy Scanner"]
-        os_scan["OS Package Scan"]
-        lib_scan["Library Scan"]
+    subgraph TrivyScanner["Trivy Security Scanner"]
+        os_scan["Operating System Packages"]
+        lib_scan["Application Libraries"]
         secret_scan["Secret Detection"]
     end
     
     os_scan & lib_scan & secret_scan --> report["Vulnerability Report"]
     
-    report --> sarif["SARIF Format"]
-    report --> table["Table Format"]
+    report --> sarif["SARIF Format Output"]
+    report --> table["Table Format Output"]
     
-    sarif --> github["GitHub Security Tab"]
-    table --> |"CRITICAL/HIGH"| fail["❌ Fail Pipeline"]
-    table --> |"MEDIUM/LOW"| pass["✅ Pass"]
+    sarif --> github_security["GitHub Security Tab"]
+    table --> |"Critical or High"| build_failed["Build Failed"]
+    table --> |"Medium or Low"| build_passed["Build Passed"]
 ```
 
-**Scan Configuration**:
-- Severity: CRITICAL, HIGH, MEDIUM
-- Ignore unfixed vulnerabilities
-- Skip cache directories
+**Trivy Configuration**
 
-### Stage 6: Push to ECR
+| Setting | Value |
+|---------|-------|
+| Severity Levels | CRITICAL, HIGH, MEDIUM |
+| Unfixed Vulnerabilities | Ignored |
+| Output Formats | SARIF, Table |
 
-**Purpose**: Store verified container image in AWS ECR.
+### Stage 6: Registry Push
 
-**Conditions**:
-- Only runs on `main` or `dev` branches
-- Requires all previous stages to pass
+This stage publishes the verified container image to AWS ECR.
+
+**Execution Conditions**
+- Branch: main or dev only
+- Prerequisites: All previous stages must pass
 
 ```mermaid
 flowchart LR
-    creds["AWS Credentials"] --> ecr["ECR Login"]
-    ecr --> push["Push Image"]
-    push --> tags["Tags:\n- {sha}-{timestamp}\n- latest"]
+    credentials["AWS Credentials"] --> authentication["ECR Authentication"]
+    authentication --> push["Image Push"]
+    push --> tags["Applied Tags"]
+    
+    subgraph ImageTags["Image Tags"]
+        sha_tag["{commit-sha}-{timestamp}"]
+        latest_tag["latest"]
+    end
+    
+    tags --> ImageTags
 ```
 
-### Stage 7: GitOps Update
+### Stage 7: GitOps Deployment
 
-**Purpose**: Update Kubernetes manifests for ArgoCD deployment.
+This stage updates Kubernetes manifests to trigger ArgoCD deployment.
 
 ```mermaid
 sequenceDiagram
-    participant Pipeline
-    participant GitOps as salon-gitops
-    participant ArgoCD
-    participant EKS
+    participant Pipeline as CI/CD Pipeline
+    participant GitOps as salon-gitops Repository
+    participant ArgoCD as ArgoCD Controller
+    participant EKS as Amazon EKS
 
     Pipeline->>GitOps: Clone repository
-    Pipeline->>GitOps: Update deployment.yaml
-    Pipeline->>GitOps: Commit & Push
-    GitOps-->>ArgoCD: Webhook trigger
-    ArgoCD->>EKS: Sync deployment
-    EKS-->>ArgoCD: Deployment status
+    Pipeline->>GitOps: Update deployment.yaml with new image tag
+    Pipeline->>GitOps: Commit and push changes
+    GitOps-->>ArgoCD: Webhook notification
+    ArgoCD->>EKS: Synchronize deployment
+    EKS-->>ArgoCD: Report deployment status
 ```
 
 ## Environment Configuration
 
-### Required Secrets
+### Required GitHub Secrets
 
-| Secret | Description |
-|--------|-------------|
-| `AWS_ACCESS_KEY_ID` | AWS IAM access key for ECR |
-| `AWS_SECRET_ACCESS_KEY` | AWS IAM secret key for ECR |
-| `GITOPS_TOKEN` | GitHub PAT for GitOps repository |
+| Secret Name | Description |
+|-------------|-------------|
+| AWS_ACCESS_KEY_ID | AWS IAM access key for ECR authentication |
+| AWS_SECRET_ACCESS_KEY | AWS IAM secret access key for ECR authentication |
+| GITOPS_TOKEN | GitHub Personal Access Token for GitOps repository |
 
-### Environment Variables
+### Pipeline Environment Variables
 
 | Variable | Value |
 |----------|-------|
-| `AWS_REGION` | eu-north-1 |
-| `ECR_REGISTRY` | 024955634588.dkr.ecr.eu-north-1.amazonaws.com |
-| `ECR_REPOSITORY` | salon-frontend |
-| `GITOPS_REPO` | salon-gitops |
+| AWS_REGION | eu-north-1 |
+| ECR_REGISTRY | 024955634588.dkr.ecr.eu-north-1.amazonaws.com |
+| ECR_REPOSITORY | salon-frontend |
+| GITOPS_REPO | salon-gitops |
 
 ## Branch Strategy
+
+The pipeline behavior varies based on the source branch:
 
 ```mermaid
 gitGraph
@@ -287,110 +291,96 @@ gitGraph
     merge dev id: "release-1" tag: "v1.0.0"
     checkout dev
     branch dev/feature-x
-    commit id: "wip"
+    commit id: "work-in-progress"
     checkout dev
-    merge dev/feature-x id: "feature-x-merged"
+    merge dev/feature-x id: "feature-merged"
     checkout main
     merge dev id: "release-2" tag: "v1.1.0"
 ```
 
 | Branch | Pipeline Behavior |
 |--------|-------------------|
-| `main` | Full pipeline + Production deploy |
-| `dev` | Full pipeline + Staging deploy |
-| `dev/*` | Build & Test only (no deploy) |
-| PR → main/dev | Build & Test only |
+| main | Full pipeline execution with production deployment |
+| dev | Full pipeline execution with staging deployment |
+| dev/* | Build and test stages only (no deployment) |
+| Pull Request | Build and test stages only (no deployment) |
 
 ## Workflow Files
 
-### Main Pipeline
-
-**File**: `.github/workflows/ci-cd-pipeline.yml`
-
-```
-📁 .github/workflows/
-├── ci-cd-pipeline.yml     # Main CI/CD workflow
-└── dependency-scan.yml    # Weekly vulnerability scan
-```
-
-### Dependency Scan
-
-**File**: `.github/workflows/dependency-scan.yml`
-
-- **Schedule**: Weekly (Monday 9:00 AM UTC)
-- **Output**: npm audit report artifact
+| File | Purpose |
+|------|---------|
+| .github/workflows/ci-cd-pipeline.yml | Primary CI/CD workflow |
+| .github/workflows/dependency-scan.yml | Scheduled weekly vulnerability scan |
 
 ## Troubleshooting
 
-### Common Issues
-
-#### 1. ESLint Failures
+### ESLint Failures
 
 ```bash
-# Check lint errors locally
+# Validate linting locally
 npm run lint
 
-# Auto-fix issues
+# Automatically fix issues
 npm run lint -- --fix
 ```
 
-#### 2. TypeScript Errors
+### TypeScript Compilation Errors
 
 ```bash
-# Check type errors locally
+# Validate types locally
 npx tsc --noEmit
 ```
 
-#### 3. Test Failures
+### Test Failures
 
 ```bash
-# Run tests locally
+# Execute tests locally
 npm test
 
-# Run with coverage
+# Execute tests with coverage report
 npm run test:coverage
 ```
 
-#### 4. Docker Build Failures
+### Docker Build Failures
 
 ```bash
-# Build locally
+# Build container locally
 docker build -t salon-frontend .
 
-# Check for issues
+# Build without cache
 docker build --no-cache -t salon-frontend .
 ```
 
-#### 5. Trivy Scan Failures
+### Trivy Scan Failures
 
 ```bash
-# Install Trivy locally
+# Install Trivy (macOS)
 brew install trivy
 
-# Scan image
+# Scan container image
 trivy image salon-frontend:latest
 ```
 
-## Monitoring & Alerts
+## Monitoring and Notifications
 
 ### Pipeline Notifications
 
-Configure GitHub repository settings for:
-- Email notifications on failure
-- Slack integration (optional)
-- Status checks for PRs
+Configure the following in GitHub repository settings:
+- Email notifications on pipeline failure
+- Slack integration for team notifications (optional)
+- Required status checks for pull requests
 
-### Security Alerts
+### Security Monitoring
 
-Monitor these locations:
-- GitHub Security tab → Code scanning alerts
-- GitHub Security tab → Dependabot alerts
-- Pipeline artifacts → Trivy reports
+Review the following locations for security information:
+- GitHub Security tab: Code scanning alerts
+- GitHub Security tab: Dependabot alerts
+- Pipeline artifacts: Trivy scan reports
 
 ## Best Practices
 
-1. **Always run tests locally before pushing**
-2. **Review security scan results regularly**
-3. **Keep dependencies updated**
-4. **Use semantic commit messages**
-5. **Require PR reviews for main branch**
+1. Execute tests locally before pushing changes
+2. Review security scan results after each pipeline execution
+3. Maintain up-to-date dependencies
+4. Follow semantic commit message conventions
+5. Require pull request reviews for protected branches
