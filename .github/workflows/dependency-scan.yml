@@ -1,0 +1,111 @@
+# =============================================================================
+# Weekly Dependency Vulnerability Scan
+# =============================================================================
+# This workflow runs weekly to scan for vulnerabilities in npm dependencies
+# =============================================================================
+
+name: Dependency Vulnerability Scan
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  dependency-scan:
+    name: Scan Dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          echo "# NPM Audit Report" > audit-report.md
+          echo "" >> audit-report.md
+          echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> audit-report.md
+          echo "" >> audit-report.md
+          npm audit --json > npm-audit.json || true
+          
+          # Parse vulnerabilities
+          CRITICAL=$(cat npm-audit.json | jq '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(cat npm-audit.json | jq '.metadata.vulnerabilities.high // 0')
+          MODERATE=$(cat npm-audit.json | jq '.metadata.vulnerabilities.moderate // 0')
+          LOW=$(cat npm-audit.json | jq '.metadata.vulnerabilities.low // 0')
+          
+          echo "## Summary" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "| Severity | Count |" >> audit-report.md
+          echo "|----------|-------|" >> audit-report.md
+          echo "| Critical | $CRITICAL |" >> audit-report.md
+          echo "| High | $HIGH |" >> audit-report.md
+          echo "| Moderate | $MODERATE |" >> audit-report.md
+          echo "| Low | $LOW |" >> audit-report.md
+          echo "" >> audit-report.md
+          
+          # Fail if critical or high vulnerabilities found
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "❌ Critical or High vulnerabilities found!"
+            echo "## ⚠️ Action Required" >> audit-report.md
+            echo "" >> audit-report.md
+            echo "Critical or high severity vulnerabilities were detected." >> audit-report.md
+            echo "Please review and update affected packages." >> audit-report.md
+            npm audit
+            exit 1
+          else
+            echo "✅ No critical or high vulnerabilities found"
+            echo "## ✅ Status: Passed" >> audit-report.md
+          fi
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report
+          path: |
+            audit-report.md
+            npm-audit.json
+          retention-days: 30
+
+      - name: Run npm outdated check
+        run: |
+          echo "# Outdated Dependencies Report" > outdated-report.md
+          echo "" >> outdated-report.md
+          echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> outdated-report.md
+          echo "" >> outdated-report.md
+          npm outdated --json > npm-outdated.json || true
+          
+          if [ -s npm-outdated.json ] && [ "$(cat npm-outdated.json)" != "{}" ]; then
+            echo "## Outdated Packages" >> outdated-report.md
+            echo "" >> outdated-report.md
+            echo "| Package | Current | Wanted | Latest |" >> outdated-report.md
+            echo "|---------|---------|--------|--------|" >> outdated-report.md
+            cat npm-outdated.json | jq -r 'to_entries[] | "| \(.key) | \(.value.current) | \(.value.wanted) | \(.value.latest) |"' >> outdated-report.md
+          else
+            echo "All packages are up to date! ✅" >> outdated-report.md
+          fi
+        continue-on-error: true
+
+      - name: Upload outdated report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-outdated-report
+          path: |
+            outdated-report.md
+            npm-outdated.json
+          retention-days: 30
