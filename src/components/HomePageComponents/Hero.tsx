@@ -1,20 +1,21 @@
 export default function Hero() {
   return (
-    <section className="relative h-[80vh] flex items-center justify-start text-white px-10 overflow-hidden">
+    <section className="relative h-[100vh] flex items-center justify-start text-white px-10 overflow-hidden">
+      
       {/* Background video */}
       <video
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover object-top"
         autoPlay
         loop
         muted
         playsInline
         preload="auto"
       >
-        <source src="https://www.salonliyo.com/assets/images/salonliyo.mp4" type="video/mp4" />
+        <source src="/1205.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* Overlay for dark effect */}
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40"></div>
 
       {/* Text content */}
@@ -26,6 +27,7 @@ export default function Hero() {
           Where expert care meets luxurious services for a transformative beauty experience in Sri Lanka.
         </p>
       </div>
+
     </section>
   )
 }

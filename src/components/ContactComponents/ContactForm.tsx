@@ -1,53 +1,82 @@
-'use client'
+'use client';
 
 export default function ContactForm() {
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-2">SEND A MESSAGE</h2>
-      <p className="text-gray-600 mb-6">
-        Have a question or need assistance? Fill out the form below and our team
-        will get back to you.
+    <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+
+      {/* Gold Accent */}
+      <div className="h-1 w-16 bg-yellow-500 rounded-full mb-4"></div>
+
+      {/* Title */}
+      <h2 className="text-3xl font-bold mb-3 tracking-wide text-gray-900">
+        Send a Message
+      </h2>
+
+      {/* Subtitle */}
+      <p className="text-gray-600 mb-8 leading-relaxed">
+        Have a question or need help?  
+        Fill out the form below and our AURORA team will reach out to you shortly.
       </p>
 
-      <form className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      {/* Contact Form */}
+      <form className="space-y-6">
+
+        {/* Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <input
             type="text"
-            placeholder="Your name*"
-            className="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Your Name *"
+            className="w-full border border-gray-300 p-3 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-yellow-500
+                       transition shadow-sm hover:shadow-md"
           />
+
           <input
             type="email"
-            placeholder="Your email*"
-            className="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Your Email *"
+            className="w-full border border-gray-300 p-3 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-yellow-500
+                       transition shadow-sm hover:shadow-md"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <input
             type="text"
-            placeholder="Your contact"
-            className="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Your Contact"
+            className="w-full border border-gray-300 p-3 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-yellow-500
+                       transition shadow-sm hover:shadow-md"
           />
+
           <input
             type="text"
-            placeholder="Subject*"
-            className="border border-gray-300 p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Subject *"
+            className="w-full border border-gray-300 p-3 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-yellow-500
+                       transition shadow-sm hover:shadow-md"
           />
         </div>
 
+        {/* Message Box */}
         <textarea
           placeholder="Your message..."
-          className="border border-gray-300 p-3 rounded w-full h-32 focus:outline-none focus:ring-2 focus:ring-red-400"
+          className="w-full border border-gray-300 p-3 rounded-lg h-32
+                     focus:outline-none focus:ring-2 focus:ring-yellow-500
+                     transition shadow-sm hover:shadow-md"
         ></textarea>
 
+        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-black text-white py-3 font-semibold rounded hover:bg-red-500 transition"
+          className="w-full bg-black text-white py-3 font-semibold rounded-lg
+                     hover:bg-yellow-600 hover:text-black transition
+                     tracking-wide shadow-md hover:shadow-lg"
         >
           SEND MESSAGE
         </button>
       </form>
     </div>
-  )
+  );
 }
