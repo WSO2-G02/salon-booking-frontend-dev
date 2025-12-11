@@ -1,0 +1,45 @@
+# ----------------------------
+# Builder
+# ----------------------------
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+COPY package.json package-lock.json* yarn.lock* ./
+RUN npm ci --legacy-peer-deps
+
+COPY . .
+
+# Accept build args for NEXT_PUBLIC_* envs
+ARG NEXT_PUBLIC_USER_API_BASE
+ARG NEXT_PUBLIC_SERVICE_API_BASE
+ARG NEXT_PUBLIC_STAFF_API_BASE
+ARG NEXT_PUBLIC_APPOINTMENT_API_BASE
+ARG NEXT_PUBLIC_NOTIFICATION_API_BASE
+ARG NEXT_PUBLIC_ANALYTICS_API_BASE
+
+# Expose them to Next at build time
+ENV NEXT_PUBLIC_USER_API_BASE=${NEXT_PUBLIC_USER_API_BASE}
+ENV NEXT_PUBLIC_SERVICE_API_BASE=${NEXT_PUBLIC_SERVICE_API_BASE}
+ENV NEXT_PUBLIC_STAFF_API_BASE=${NEXT_PUBLIC_STAFF_API_BASE}
+ENV NEXT_PUBLIC_APPOINTMENT_API_BASE=${NEXT_PUBLIC_APPOINTMENT_API_BASE}
+ENV NEXT_PUBLIC_NOTIFICATION_API_BASE=${NEXT_PUBLIC_NOTIFICATION_API_BASE}
+ENV NEXT_PUBLIC_ANALYTICS_API_BASE=${NEXT_PUBLIC_ANALYTICS_API_BASE}
+
+RUN npm run build
+
+# ----------------------------
+# Runner
+# ----------------------------
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy standalone output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
