@@ -1,6 +1,6 @@
 import { Token } from '@/lib/auth'
 
-export const API_BASE = process.env.NEXT_PUBLIC_USER_API_BASE || "https://user-service-salon.azurewebsites.net"
+export const API_BASE = process.env.NEXT_PUBLIC_USER_API_BASE;
 
 /** ------------------ GET VALID ACCESS TOKEN ------------------ **/
 /**

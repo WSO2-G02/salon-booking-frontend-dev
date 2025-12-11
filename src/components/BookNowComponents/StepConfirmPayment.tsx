@@ -6,6 +6,7 @@ import { showToast } from "@/components/Toast";
 import { use, useEffect, useState } from "react";
 
 interface Props {
+  onNext?: (data: any) => void;
   service: any;
   date: string;
   time: string;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function StepConfirmPayment({
+  onNext,
   service,
   date,
   time,
@@ -22,11 +24,14 @@ export default function StepConfirmPayment({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [userID, setUserID] = useState<number>();
+  const [notes, setNotes] = useState<string>("");
+  const [appointmentData, setAppointmentData] = useState<any>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const profile = await getUserProfile();
+        console.log(profile)
         setUserID(profile.id);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -36,6 +41,7 @@ export default function StepConfirmPayment({
   }, []);
 
   const handleConfirm = async () => {
+    console.log("Staff ID", staffId)
     setLoading(true);
     let formattedTime = time;
     if (time.includes("PM")) {
@@ -48,17 +54,32 @@ export default function StepConfirmPayment({
       formattedTime = `${hour.toString().padStart(2, "0")}:${minute
         .toString()
         .padStart(2, "0")}`;
+    }else if (time.includes("AM")) {
+      const [hourStr, minuteStr] = time.replace(" AM", "").split(":");
+      let hour = parseInt(hourStr);
+      const minute = parseInt(minuteStr);
+      if (hour === 12) {
+        hour = 0;
+      }
+      formattedTime = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
     }
-    const appointment_datetime = `${date}T${formattedTime}:00`;
+    const appointment_datetime = `${date}T${formattedTime}`;
     try {
+
       const res = await bookAppointment({
-        service_id: service,
-        user_id: userID!,
+        user_id: userID,
+        service_id: service.id,
         staff_id: staffId!,
-        duration_minutes: durationMinutes!,
+        appointment_date: date,
         appointment_datetime: appointment_datetime,
+        customer_notes: notes!,
       });
-      showToast(`Appointment confirmed! ID: ${res.appointment_id}`, "success");
+      setAppointmentData(res.data.appointment);
+      console.log("StepConfirmPayment:", res);
+      showToast(`Appointment confirmed! ID: ${res.data.appointment.id}`, "success");
+      if (onNext) onNext(res.data.appointment);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Booking failed", "error");
     } finally {
@@ -82,11 +103,17 @@ export default function StepConfirmPayment({
           Duration: {service.duration} minutes
         </p>
         <p className="mb-2 text-gray-600">Date: {date}</p>
-        <p className="mb-4 text-gray-600">Time: {time}</p>
+        <textarea
+          className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent resize-none"
+          placeholder="Additional notes (optional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+        />
 
-        <button
+        <button 
           onClick={handleConfirm}
-          disabled={loading}
+          disabled={loading && !userID}
           className={`px-6 py-2 rounded-full text-white ${
             loading ? "bg-gray-400" : "bg-gray-800 hover:bg-black"
           }`}

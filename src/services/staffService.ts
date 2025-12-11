@@ -17,7 +17,7 @@
  * @module staffService
  */
 
-const API_BASE = "https://staff-service.azurewebsites.net";
+const API_BASE = process.env.NEXT_PUBLIC_STAFF_API_BASE;
 
 // =====================================================
 // TYPE DEFINITIONS - Matching Backend Pydantic Schemas
@@ -283,7 +283,7 @@ export async function deleteStaff(staffId: number): Promise<void> {
 export async function getStaffAvailability(
   staffId: number,
   slotDate: string,
-  serviceDuration: number = 60
+  serviceDuration: number = 59
 ): Promise<StaffAvailabilityResponse> {
   const params = new URLSearchParams({
     slot_date: slotDate,

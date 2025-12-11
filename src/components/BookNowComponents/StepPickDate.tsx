@@ -10,8 +10,8 @@ import {
 import StylistCard from "./StylistCard";
 
 interface Props {
-  onNext: (data: { date: string, time: string, staffId: number}) => void;
-  prevData?: { date: string, time: string };
+  onNext: (data: { date: string; time: string; staffId: number }) => void;
+  prevData?: { date: string; time: string; staffId: number };
   staffId?: number;
   serviceId?: number;
 }
@@ -27,10 +27,11 @@ export default function StepPickDate({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [staffMembers, setStaffMembers] = useState<StaffResponse[]>([]);
+  const [staffMember, setStaffMember] = useState<number>(1);
 
-  const x = [1, 2, 3,4,5,6];
+  const x = [1, 2, 3, 4, 5, 6];
 
-  const durationMinutes = 60; // assuming 1 hour service duration
+  const durationMinutes = 59; // assuming 1 hour service duration
 
   // 🔄 Fetch available slots when date changes
   // useEffect(() => {
@@ -48,14 +49,18 @@ export default function StepPickDate({
 
   useEffect(() => {
     // Fetch staff members on component mount
+    setLoading(true);
     console.log("Getting Staff Member details");
     getStaffMembers(1, 10, true)
       .then((res) => {
-         setStaffMembers(res);
+        setStaffMembers(res);
+        console.log("Staff Members:", res);
       })
       .catch((err) => {
         console.error("Error fetching staff members:", err);
-      });
+        setError("Oops...Failed to load stylists. Please try again later.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -79,46 +84,57 @@ export default function StepPickDate({
             />
           </div>
 
-
-
           {error && <p className="text-red-500">{error}</p>}
 
-          {date && !loading && (
+          {date && (
             <div>
               <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-yellow-500 to-red-500 bg-clip-text text-transparent">
                 Select Your Stylist
               </h2>
+              {loading && (
+                <div className="flex justify-center items-center gap-3 text-gray-500 mt-8">
+                  <Loader2 className="w-8 h-8 animate-spin " />
+                  <span className="text-lg">Loading your stylists</span>
+                </div>
+              )}
+              {error && <p className="text-red-500 mt-4">{error}</p>}
               <div className="grid grid-cols-3 gap-4 w-full">
-                {x.map((staff) => (
-                  // <StylistCard
-                  //   key={staff.id}
-                  //   staffId={staff.id}
-                  //   name={`Stylist ${staff.id}`}
-                  //   specialties={staff.specialties ? staff.specialties.split(",") : []} 
-                  //   date={date}
-                  //   durationMinutes={durationMinutes}
-                  // />
+                {staffMembers.map((staff) => (
                   <StylistCard
-                    onClickCheckAvailability={(data) => { setSelectedTime(data.time); }}
-                    key={staff}
-                    staffId={staff} name="John Doe" 
-                    specialties={["Hair","Beard","Manicure","Pedicure"]}
+                    key={staff.id}
+                    onClickCheckAvailability={(data) => {
+                      setSelectedTime(data.time);
+                      setStaffMember(staff.id);
+                    }}
+                    staffId={staff.id}
+                    name={staff.employee_id}
+                    specialties={
+                      staff.specialties ? staff.specialties.split(",") : []
+                    }
                     date={date}
-                    durationMinutes={durationMinutes}/>
+                    durationMinutes={durationMinutes}
+                  />
+                  // <StylistCard
+                  //   onClickCheckAvailability={(data) => { setSelectedTime(data.time); }}
+                  //   key={staff}
+                  //   staffId={staff} name="John Doe"
+                  //   specialties={["Hair","Beard","Manicure","Pedicure"]}
+                  //   date={date}
+                  //   durationMinutes={durationMinutes}/>
                 ))}
               </div>
             </div>
           )}
 
-
-
           <button
-            disabled={!selectedTime}
-            onClick={() => onNext({
-              date: date,
-              time: selectedTime,
-              staffId: 1,
-            })}
+            disabled={!selectedTime || !staffMember}
+            onClick={() =>
+              onNext({
+                date: date,
+                time: selectedTime,
+                staffId: staffMember || 1,
+              })
+            }
             className={`mt-8 w-full max-w-sm py-3 rounded-full font-semibold tracking-wide transition-all duration-300 ${
               selectedTime
                 ? "bg-gray-900 text-white shadow-lg hover:scale-[1.03]"

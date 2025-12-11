@@ -25,10 +25,11 @@ export default function CheckAvailability({
 
   useEffect(() => {
     if (date && durationMinutes) {
-    //   setLoading(true);
+      setLoading(true);
       getStaffAvailability(staffId, date, durationMinutes)
         .then((res) => {
           setAvailability(res);
+          console.log(res)
         })
         .catch((err) => {
           console.error("Error fetching staff availability:", err);
@@ -37,12 +38,6 @@ export default function CheckAvailability({
     }
   }, [date, durationMinutes, staffId]);
 
-  const dummySlots = [
-    { start_time: "10:00 AM" },
-    { start_time: "11:00 AM" },
-    { start_time: "01:00 PM" },
-    { start_time: "02:00 PM" },
-  ];
 
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 ">
@@ -60,9 +55,9 @@ export default function CheckAvailability({
           </div>
         )}
 
-        {!loading && dummySlots && dummySlots.length > 0 ? (
+        {!loading && availability && availability.available_slots.length > 0 ? (
           <div className="space-y-2 max-h-80 overflow-y-auto mb-6">
-            {dummySlots.map((slot, index) => (
+            {availability.available_slots.map((slot, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedSlot(slot.start_time)}
@@ -77,9 +72,11 @@ export default function CheckAvailability({
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8 text-sm">
+          !loading && (
+            <p className="text-gray-500 text-center py-8 text-m">
             No available slots
           </p>
+          )
         )}
 
         <div className="flex gap-3 mt-6">

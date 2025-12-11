@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { userApiFetch } from "@/lib/userApi";
 import { Mail, Phone, Calendar } from "lucide-react";
+import { getUserProfile } from "@/services/userService";
 
 
 interface Profile {
@@ -24,20 +25,19 @@ const MOCK_PROFILE: Profile = {
 export default function ProfileDetails() {
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  async function load() {
-    try {
-      const res = await userApiFetch("/profile", { method: "GET" });
-      if (!res.ok) throw new Error("API failed");
-      const data = await res.json();
-      setProfile(data);
-    } catch {
-      // DEV BYPASS: Use mock data when API fails
-      setProfile(MOCK_PROFILE);
-    }
-  }
+
 
   useEffect(() => {
-    load();
+        const fetchUserProfile = async () => {
+          try {
+            const profile = await getUserProfile();
+            
+            setProfile(profile);
+          } catch (error) {
+            console.error("Failed to fetch user profile", error);
+          }
+        };
+        fetchUserProfile();
   }, []);
 
   if (!profile) return null;

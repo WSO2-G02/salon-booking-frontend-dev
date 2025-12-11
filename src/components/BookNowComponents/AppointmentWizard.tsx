@@ -5,12 +5,14 @@ import AppointmentStepTabs from "./AppointmentStepTabs";
 import StepSelectService from "./StepSelectService";
 import StepPickDate from "./StepPickDate";
 import StepConfirmPayment from "./StepConfirmPayment";
+import AppointmentConfirmation from "./AppointmentConfirmation";
 
 export default function AppointmentWizard() {
   const [step, setStep] = useState(1);
   const [service, setService] = useState<any>(null);
   const [date, setDate] = useState<{ date: string } | null>(null);
   const [time, setTime] = useState<{ time: string } | null>(null);
+  const [appointmentData, setAppointmentData] = useState<any>(null);
 
   const [staffId, setStaffId] = useState<number | null>(null);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
@@ -34,11 +36,11 @@ export default function AppointmentWizard() {
           onNext={(data) => {
             setDate({ date: data.date });
             setTime({ time: data.time });
-            setStaffId(1); // Set the selected staff ID here
-            setDurationMinutes(60); // Set the duration in minutes here
+            setStaffId(data.staffId); // Set the selected staff ID here
+            setDurationMinutes(59); // Set the duration in minutes here
             setStep(3);
           }}
-          prevData={date && time ? { date: date.date, time: time.time } : undefined}
+          prevData={date && time && staffId !== null ? { date: date.date, time: time.time, staffId } : undefined}
         />
       )}
 
@@ -48,6 +50,11 @@ export default function AppointmentWizard() {
         staffId !== null &&
         durationMinutes !== null && (
           <StepConfirmPayment
+            onNext={(data) => {
+              setAppointmentData(data);
+              console.log("Wizard:",data)
+              setStep(4);
+            }}
             service={service}
             date={date.date}
             time={time.time}
@@ -55,6 +62,8 @@ export default function AppointmentWizard() {
             durationMinutes={durationMinutes}
           />
         )}
+
+      {step === 4 && <AppointmentConfirmation appointmentData={appointmentData} />}
     </div>
   );
 }

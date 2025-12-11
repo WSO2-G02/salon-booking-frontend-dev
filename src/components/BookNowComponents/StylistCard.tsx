@@ -3,7 +3,7 @@ import CheckAvailability from "./CheckAvailability";
 import { useState } from "react";
 import { Gem } from "lucide-react";
 interface Props {
-  onClickCheckAvailability: (data: { time: string }) => void;
+  onClickCheckAvailability: (data: { time: string, staffId: number }) => void;
   staffId: number;
   name: string;
   specialties: string[];
@@ -49,7 +49,7 @@ export default function StylistCard({ ...props }: Props) {
         Check Availability
       </button>
       {showAvailability && (
-        <CheckAvailability staffId={props.staffId} date={props.date} durationMinutes={props.durationMinutes} onAvailabilityChange={(time) => {  setSelectedTime(time); props.onClickCheckAvailability({ time }); }} closeModal={() => setShowAvailability(false)} />
+        <CheckAvailability staffId={props.staffId} date={props.date} durationMinutes={props.durationMinutes} onAvailabilityChange={(time) => {  setSelectedTime(time); props.onClickCheckAvailability({ time, staffId: props.staffId }); }} closeModal={() => setShowAvailability(false)} />
       )}
     </div>
   );

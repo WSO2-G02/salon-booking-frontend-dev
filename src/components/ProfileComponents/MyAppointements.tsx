@@ -19,45 +19,16 @@ export default function MyAppointments() {
   const [appointmentsList, setAppointmentsList] = useState<any[]>([]);
   const [userID, setUserID] = useState<number>();
 
-  const dummyAppointments = [
-    {
-      id: 1,
-      user_id: 1,
-      service: "Haircut",
-      staff_id: 2,
-      appointment_datetime: "2024-07-15T10:00:00",
-      price: 1500,
-      status: "Active",
-      is_active: true,
-    },
-    {
-      id: 2,
-      user_id: 1,
-      service: "Manicure",
-      staff_id: 3,
-      appointment_datetime: "2024-07-16T14:00:00",
-      price: 2000,
-      status: "Active",
-      is_active: true,
-    },
-    {
-      id: 3,
-      user_id: 1,
-      service: "Pedicure",
-      staff_id: 4,
-      appointment_datetime: "2024-07-17T16:00:00",
-      price: 2500,
-      status: "Active",
-      is_active: true,
-    },
-  ];
+  
 
   useEffect(() => {
     // Fetch user appointments on component mount
     const fetchUserProfile = async () => {
       try {
         const profile = await getUserProfile();
+        console.log(profile)
         setUserID(profile.id);
+        fetchAppointments();
       } catch (error) {
         console.error("Failed to fetch user profile", error);
       }
@@ -66,13 +37,14 @@ export default function MyAppointments() {
     const fetchAppointments = async () => {
       try {
         const response = await getUserAppointments(userID!);
+        console.log(response)
         setAppointmentsList(response);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       }
     };
-    fetchAppointments();
-  }, []);
+    
+  }, [userID,appointmentsList]);
 
   const handleCancelAppointment = (appointmentId: number) => {
     // Implement cancellation logic here
@@ -80,7 +52,7 @@ export default function MyAppointments() {
   };
 
   // Empty state
-  if (dummyAppointments.length === 0) {
+  if (appointmentsList.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <User size={48} className="mx-auto text-gray-400 mb-4" />
@@ -118,9 +90,6 @@ export default function MyAppointments() {
                 Date and Time
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
               <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -131,7 +100,7 @@ export default function MyAppointments() {
 
           {/* Table Body */}
           <tbody className="bg-white divide-y divide-gray-200">
-            {dummyAppointments.map((appointment) => (
+            {appointmentsList.map((appointment) => (
               <tr
                 key={appointment.id}
                 className={`hover:bg-gray-50 transition-colors ${
@@ -156,7 +125,7 @@ export default function MyAppointments() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center text-sm text-gray-900">
                     <Lightbulb size={14} className="mr-2 text-gray-400" />
-                    {appointment.service}
+                    {appointment.service_id}
                   </div>
                 </td>
 
@@ -181,21 +150,21 @@ export default function MyAppointments() {
                 </td>
 
                 {/* Price */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {appointment.price} LKR
-                </td>
+
 
                 {/* Status Badge */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span
+                    <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      appointment.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-600"
+                      appointment.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : appointment.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-600"
                     }`}
-                  >
-                    {appointment.status === "Active" ? "Active" : "Inactive"}
-                  </span>
+                    >
+                    {appointment.status === "active" ? "Active" : appointment.status === "pending" ? "Pending" : "Inactive"}
+                    </span>
                 </td>
 
                 {/* Action Buttons */}

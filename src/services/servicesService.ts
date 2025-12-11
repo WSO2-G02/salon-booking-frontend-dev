@@ -17,7 +17,7 @@
  * @module servicesService
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_SERVICES_API_BASE || "https://services-management.azurewebsites.net";
+const API_BASE = process.env.NEXT_PUBLIC_SERVICE_API_BASE;
 
 // =====================================================
 // TYPE DEFINITIONS - Matching Backend Pydantic Schemas
@@ -80,7 +80,7 @@ export interface SuccessResponse {
  * Get admin auth headers
  */
 function getAdminHeaders(): HeadersInit {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
