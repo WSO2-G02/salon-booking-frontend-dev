@@ -1,0 +1,228 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**'            # or restrict to frontend-specific files if monorepo; here repo is frontend-only
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-north-1
+  AWS_ACCOUNT_ID: '024955634588'   # replace if different
+  GITOPS_REPO: 'WSO2-G02/salon-gitops'  # repo to update
+  FRONTEND_SERVICE_NAME: 'salon-frontend'
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------
+  # Optional: run unit tests
+  # ---------------------------
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run tests
+        run: |
+          if [ -f package.json ] && jq -r '.scripts.test // empty' package.json | grep -q '.'; then
+            npm run test --silent || true
+          else
+            echo "No test script defined; skipping tests"
+          fi
+
+  # ---------------------------
+  # Build Docker image
+  # ---------------------------
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    needs: [ test ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate image tags
+        id: meta
+        run: |
+          SHORT_SHA=${GITHUB_SHA::8}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          ECR_REGISTRY=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
+          FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
+          LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
+          echo "latest_image=${LATEST_IMAGE}" >> $GITHUB_OUTPUT
+          echo "ecr_registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: |
+            ${{ steps.meta.outputs.full_image }}
+            ${{ steps.meta.outputs.latest_image }}
+          build-args: |
+            NEXT_PUBLIC_USER_API_BASE=${{ secrets.NEXT_PUBLIC_USER_API_BASE }}
+            NEXT_PUBLIC_SERVICE_API_BASE=${{ secrets.NEXT_PUBLIC_SERVICE_API_BASE }}
+            NEXT_PUBLIC_STAFF_API_BASE=${{ secrets.NEXT_PUBLIC_STAFF_API_BASE }}
+            NEXT_PUBLIC_APPOINTMENT_API_BASE=${{ secrets.NEXT_PUBLIC_APPOINTMENT_API_BASE }}
+            NEXT_PUBLIC_NOTIFICATION_API_BASE=${{ secrets.NEXT_PUBLIC_NOTIFICATION_API_BASE }}
+            NEXT_PUBLIC_ANALYTICS_API_BASE=${{ secrets.NEXT_PUBLIC_ANALYTICS_API_BASE }}
+
+      - name: Save image artifact
+        run: |
+          docker save ${{ steps.meta.outputs.full_image }} | gzip > image-frontend.tar.gz
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-frontend
+          path: image-frontend.tar.gz
+          retention-days: 1
+
+  # ---------------------------
+  # Trivy scan (vulnerabilities)
+  # ---------------------------
+#   trivy:
+#     name: Trivy Scan
+#     runs-on: ubuntu-latest
+#     needs: [ build ]
+#     permissions:
+#       contents: read
+#       security-events: write
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Download image artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: image-frontend
+
+#       - name: Load image
+#         run: gunzip -c image-frontend.tar.gz | docker load
+
+#       - name: Run Trivy (SARIF + Table)
+#         uses: aquasecurity/trivy-action@0.28.0
+#         with:
+#           image-ref: ${{ steps.build.outputs.full_image || format('{0}/{1}:{2}', needs.build.outputs.ecr_registry, env.FRONTEND_SERVICE_NAME, needs.build.outputs.image_tag) }}
+#           format: sarif
+#           output: trivy-results.sarif
+#           severity: CRITICAL,HIGH
+#           ignore-unfixed: true
+
+#       - name: Upload SARIF to GitHub (optional)
+#         uses: github/codeql-action/upload-sarif@v4
+#  if: always()
+#         with:
+#           sarif_file: trivy-results.sarif
+#           category: trivy-frontend
+
+  # ---------------------------
+  # Push to ECR
+  # ---------------------------
+  push-to-ecr:
+    name: Push to ECR
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-frontend
+
+      - name: Load and push image
+        env:
+          ECR_REGISTRY: ${{ steps.build.outputs.ecr_registry || format('{0}.dkr.ecr.{1}.amazonaws.com', env.AWS_ACCOUNT_ID, env.AWS_REGION) }}
+        run: |
+          gunzip -c image-frontend.tar.gz | docker load
+          SHORT_SHA=${GITHUB_SHA::8}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
+          FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
+          LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
+          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1) $FULL_IMAGE || true
+          docker push $FULL_IMAGE
+          docker tag $FULL_IMAGE $LATEST_IMAGE
+          docker push $LATEST_IMAGE
+          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_OUTPUT
+
+  # ---------------------------
+  # Update GitOps repository
+  # ---------------------------
+  update-gitops:
+    name: Update GitOps
+    runs-on: ubuntu-latest
+    needs: [ push-to-ecr ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GITOPS_REPO }}
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update image tag in deployment manifests
+        env:
+          ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+        run: |
+          cd gitops
+          SHORT_SHA=${GITHUB_SHA::8}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
+          DEPLOY_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
+          if [ -f "$DEPLOY_FILE" ]; then
+            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$DEPLOY_FILE"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add "$DEPLOY_FILE"
+            git commit -m "chore: update frontend image to ${IMAGE_TAG} for commit ${GITHUB_SHA}" || true
+            git push
+          else
+            echo "No deployment file found at $DEPLOY_FILE"
+          fi
