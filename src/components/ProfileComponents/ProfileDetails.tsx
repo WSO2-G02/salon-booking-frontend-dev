@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { userApiFetch } from "@/lib/userApi";
 import { Mail, Phone, Calendar } from "lucide-react";
+import { getUserProfile } from "@/services/userService";
+
 
 interface Profile {
   email?: string;
@@ -29,7 +31,16 @@ export default function ProfileDetails() {
   }
 
   useEffect(() => {
-    load();
+        const fetchUserProfile = async () => {
+          try {
+            const profile = await getUserProfile();
+            
+            setProfile(profile);
+          } catch (error) {
+            console.error("Failed to fetch user profile", error);
+          }
+        };
+        fetchUserProfile();
   }, []);
 
   // ---------------------------------------------------

@@ -20,8 +20,13 @@ export default function ProfileHeader() {
   const [error, setError] = useState<string | null>(null);
   const [showEdit, setShowEdit] = useState(false);
 
+  // --------------------------------------------------------------------
+  // FETCH PROFILE
+  // --------------------------------------------------------------------
   async function load() {
     setLoading(true);
+    setError(null);
+
     try {
       const res = await userApiFetch("/api/v1/profile");
 
@@ -37,15 +42,15 @@ export default function ProfileHeader() {
   }
 
   useEffect(() => {
-    load();
+    load(); // <- FIXED (this was fetchUserProfile, which didn't exist)
   }, []);
 
   // --------------------------------------------------------------------
-  // ⭐ SKELETON LOADER FOR HEADER
+  // LOADING SKELETON
   // --------------------------------------------------------------------
   if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-br from-slate-900 to-black text-white">
+      <section className="py-20 bg-gradient-to-br from-slate-900 to-black text-white relative">
         <div className="max-w-5xl mx-auto px-6 text-center">
 
           {/* Fake Edit Button */}
@@ -54,8 +59,7 @@ export default function ProfileHeader() {
           </div>
 
           {/* Avatar Skeleton */}
-          <div className="mx-auto w-28 h-28 rounded-full bg-gradient-to-br 
-                          from-gray-700 to-gray-600 animate-pulse"></div>
+          <div className="mx-auto w-28 h-28 rounded-full bg-gray-700 animate-pulse"></div>
 
           {/* Name Skeleton */}
           <div className="mx-auto mt-6 h-8 w-56 bg-gray-700 rounded animate-pulse"></div>
@@ -85,11 +89,13 @@ export default function ProfileHeader() {
     );
   }
 
-  // Generate initials
+  // --------------------------------------------------------------------
+  // INITIALS
+  // --------------------------------------------------------------------
   const initials =
     profile.full_name
       ?.split(" ")
-      .map((x: string) => x[0])
+      .map((x) => x[0])
       .join("")
       .toUpperCase() ||
     profile.username?.slice(0, 2).toUpperCase() ||
@@ -100,7 +106,7 @@ export default function ProfileHeader() {
   // --------------------------------------------------------------------
   return (
     <>
-      <section className="py-20 bg-gradient-to-br from-slate-900 to-black text-white">
+      <section className="py-20 bg-gradient-to-br from-slate-900 to-black text-white relative">
         <div className="max-w-5xl mx-auto px-6 text-center relative">
 
           {/* Edit Button */}
@@ -108,7 +114,7 @@ export default function ProfileHeader() {
             onClick={() => setShowEdit(true)}
             className="absolute right-0 top-0 mt-4 mr-4 bg-white text-slate-900 
                        px-4 py-2 rounded-lg shadow hover:bg-slate-200 
-                       flex items-center gap-2"
+                       flex items-center gap-2 transition-all"
           >
             <Pencil className="w-4 h-4" />
             Edit

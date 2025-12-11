@@ -1,88 +1,159 @@
 /**
- * SERVICES MANAGEMENT API CLIENT (FIXED)
+ * Services Service API Client
+ * Handles all API calls to the Service Management Service (Port 8002).
  */
 
-import { Token } from "@/lib/auth";
+const API_BASE = process.env.NEXT_PUBLIC_SERVICE_API_BASE?.replace(/\/+$/, "") || "";
 
-const RAW_BASE =
-  process.env.NEXT_PUBLIC_SERVICE_API_BASE ||
-  "https://services-management.azurewebsites.net";
+// =====================================================
+// TYPE DEFINITIONS
+// =====================================================
 
-const API_BASE = RAW_BASE.replace(/\/+$/, ""); // trim trailing slash
+export interface ServiceCreate {
+  name: string;
+  description?: string;
+  category?: string;
+  price: number;
+  duration_minutes: number;
+}
 
-// ---------------------- AUTH HEADERS ----------------------
-function getAuthHeaders(): HeadersInit {
-  const access = Token.getAccess();
+export interface ServiceUpdate {
+  name?: string;
+  description?: string;
+  category?: string;
+  price?: number;
+  duration_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface ServiceResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  category: string | null;
+  price: number;
+  duration_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SuccessResponse {
+  status: string;
+  data: { service: ServiceResponse } | null;
+  message: string;
+}
+
+// =====================================================
+// HEADER HELPERS
+// =====================================================
+
+function getAdminHeaders(): HeadersInit {
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   return {
     "Content-Type": "application/json",
-    ...(access ? { Authorization: `Bearer ${access}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
-// ---------------------- RESPONSE HANDLER ----------------------
+function getPublicHeaders(): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+  };
+}
+
+// =====================================================
+// RESPONSE HANDLER
+// =====================================================
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(err.message || `HTTP ${response.status}`);
+    const error = await response.json().catch(() => ({ detail: "Request failed" }));
+    throw new Error(error.detail || error.message || `HTTP error ${response.status}`);
   }
   return response.json();
 }
 
-// ---------------------- API CALLS ----------------------
-export async function getServices() {
-  const res = await fetch(`${API_BASE}/api/v1/services`, {
+// =====================================================
+// PUBLIC ENDPOINT (NO TOKEN REQUIRED)
+// =====================================================
+
+/**
+ * Public list of services (unauthenticated users)
+ */
+export async function getPublicServices(): Promise<ServiceResponse[]> {
+  const res = await fetch(`${API_BASE}/api/v1/servicespub`, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: getPublicHeaders(),
   });
-  return handleResponse(res);
-}
 
-export async function getServiceById(id: number) {
-  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(res);
+  return handleResponse<ServiceResponse[]>(res);
 }
-
-export async function getCategories() {
-  const res = await fetch(`${API_BASE}/api/v1/categories`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(res);
-}
-
-export async function createService(data: any) {
-  const res = await fetch(`${API_BASE}/api/v1/services`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-export async function updateService(id: number, data: any) {
-  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-export async function deleteService(id: number) {
-  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
-  return handleResponse(res);
-}
-
 
 // =====================================================
-// CATEGORY FILTER ENDPOINT
+// SERVICE CRUD (ADMIN)
+// =====================================================
+
+export async function getServices(
+  activeOnly: boolean = false,
+  category?: string
+): Promise<ServiceResponse[]> {
+  const params = new URLSearchParams({ active_only: activeOnly.toString() });
+
+  if (category) params.append("category", category);
+
+  const res = await fetch(`${API_BASE}/api/v1/services?${params}`, {
+    method: "GET",
+    headers: getAdminHeaders(),
+  });
+
+  return handleResponse(res);
+}
+
+export async function getServiceById(id: number): Promise<ServiceResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
+    method: "GET",
+    headers: getAdminHeaders(),
+  });
+
+  return handleResponse(res);
+}
+
+export async function createService(data: ServiceCreate): Promise<SuccessResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/services`, {
+    method: "POST",
+    headers: getAdminHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return handleResponse(res);
+}
+
+export async function updateService(id: number, data: ServiceUpdate) {
+  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
+    method: "PUT",
+    headers: getAdminHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return handleResponse(res);
+}
+
+export async function deleteService(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/services/${id}`, {
+    method: "DELETE",
+    headers: getAdminHeaders(),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Delete failed" }));
+    throw new Error(error.detail || "Failed to deactivate service");
+  }
+}
+
+// =====================================================
+// FILTERING & SEARCH
 // =====================================================
 
 export async function getServicesByCategory(category: string): Promise<ServiceResponse[]> {
@@ -90,29 +161,32 @@ export async function getServicesByCategory(category: string): Promise<ServiceRe
     `${API_BASE}/api/v1/services/category/${encodeURIComponent(category)}`,
     {
       method: "GET",
-      headers: getUserHeaders(),
+      headers: getAdminHeaders(),
     }
   );
-  return handleResponse<ServiceResponse[]>(res);
+
+  return handleResponse(res);
 }
 
-// =====================================================
-// PRICE RANGE FILTER ENDPOINT
-// =====================================================
-
-export async function getServicesByPriceRange(min?: number, max?: number): Promise<ServiceResponse[]> {
+export async function getServicesByPriceRange(min?: number, max?: number) {
   const params = new URLSearchParams();
 
   if (min !== undefined) params.append("min_price", String(min));
   if (max !== undefined) params.append("max_price", String(max));
 
-  const res = await fetch(
-    `${API_BASE}/api/v1/services/price-range?${params.toString()}`,
-    {
-      method: "GET",
-      headers: getUserHeaders(),
-    }
-  );
+  const res = await fetch(`${API_BASE}/api/v1/services/price-range?${params}`, {
+    method: "GET",
+    headers: getAdminHeaders(),
+  });
 
-  return handleResponse<ServiceResponse[]>(res);
+  return handleResponse(res);
+}
+
+// =====================================================
+// HEALTH CHECK
+// =====================================================
+
+export async function checkHealth() {
+  const res = await fetch(`${API_BASE}/api/v1/health`, { method: "GET" });
+  return handleResponse(res);
 }
