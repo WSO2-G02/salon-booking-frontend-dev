@@ -1,8 +1,10 @@
+import hero from '../../images/aboutHero.png';
+
 export default function AboutHero() {
   return (
     <section
       className="relative h-[70vh] bg-cover bg-center flex items-center px-10 text-white"
-      style={{ backgroundImage: "url('https://www.bing.com/th/id/OIP.8WG1cszsrC-WjL4nIwFw8gHaEJ?w=308&h=211&c=8&rs=1&qlt=90&o=6&cb=12&dpr=1.2&pid=3.1&rm=2')" }}
+      style={{ backgroundImage: `url(${hero.src})` }}
     >
       <div className="max-w-2xl">
         <h1 className="text-5xl font-bold mb-4">About AURORA Salon</h1>
@@ -11,5 +13,5 @@ export default function AboutHero() {
         </p>
       </div>
     </section>
-  )
+  );
 }

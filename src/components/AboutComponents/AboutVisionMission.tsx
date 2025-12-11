@@ -1,32 +1,49 @@
-import Image from 'next/image'
+"use client";
+import Image from "next/image";
+import visionMissionImg from "../../images/team.png";
 
 export default function AboutVisionMission() {
   return (
     <section className="py-20 bg-black text-white">
+
+      {/* Gold Accent */}
+      <div className="flex justify-center mb-4">
+        <div className="h-1 w-20 bg-yellow-500 rounded-full"></div>
+      </div>
+
+      {/* Heading */}
+      <h2 className="text-4xl font-bold text-center mb-12 tracking-wide">
+        Our Vision & Mission
+      </h2>
+
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center px-5">
-        <div className="relative w-full h-64">
+
+        {/* Image */}
+        <div className="relative w-full h-72 md:h-80 rounded-lg overflow-hidden shadow-lg">
           <Image
-            src="https://th.bing.com/th/id/OIP.Jb8V4aalWUFQ_VcGTyHp2AHaEE?w=285&h=180&c=7&r=0&o=7&cb=12&dpr=1.2&pid=1.7&rm=3"
-            alt="Our Team"
+            src={visionMissionImg}
+            alt="Aurora Salon Sri Lankan Team"
             fill
-            className="rounded-lg shadow-lg object-cover"
+            className="object-cover"
           />
         </div>
 
+        {/* Text */}
         <div>
-          <h2 className="text-4xl font-bold mb-6">Our Vision and Mission</h2>
-          <p className="mb-6 leading-relaxed">
-            <b>Our vision</b> is to set the standard for beauty and wellness in Sri Lanka by combining
-            cutting-edge techniques with a personalized touch. We’re dedicated to continually
-            improving our services and facilities to meet the evolving needs of our clients.
+          <p className="mb-6 leading-relaxed text-lg text-gray-300">
+            <b className="text-yellow-400">Our Vision</b> is to redefine beauty and wellness in Sri Lanka by
+            blending modern expertise with heartfelt Sri Lankan hospitality.
+            We strive to create a space where elegance, care, and innovation meet.
           </p>
-          <p className="leading-relaxed">
-            <b>Our mission</b> is to provide exceptional beauty services that enhance the natural
-            beauty of our clients while creating a welcoming environment where every client feels
-            valued and pampered.
+
+          <p className="leading-relaxed text-lg text-gray-300">
+            <b className="text-yellow-400">Our Mission</b> is to deliver exceptional beauty services that
+            uplift natural beauty, build confidence, and create memorable experiences—
+            ensuring every client feels valued, pampered, and beautifully transformed.
           </p>
         </div>
+
       </div>
     </section>
-  )
+  );
 }
