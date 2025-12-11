@@ -172,6 +172,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL'
           ignore-unfixed: true
+          trivyignores: '.trivyignore'
           cache: true
           exit-code: '1'     # Fail pipeline if vulnerabilities found
 
