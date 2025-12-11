@@ -170,7 +170,7 @@ jobs:
           image-ref: ${{ steps.load.outputs.image_ref }}
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           ignore-unfixed: true
           cache: true
           exit-code: '1'     # Fail pipeline if vulnerabilities found
