@@ -1,30 +1,55 @@
-name: Frontend CI/CD
+name: Frontend CI/CD 
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - '**'            # or restrict to frontend-specific files if monorepo; here repo is frontend-only
+      - '**'
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
 env:
   AWS_REGION: eu-north-1
-  AWS_ACCOUNT_ID: '024955634588'   # replace if different
-  GITOPS_REPO: 'WSO2-G02/salon-gitops'  # repo to update
+  AWS_ACCOUNT_ID: '024955634588'     # replace if different
+  GITOPS_REPO: 'WSO2-G02/salon-gitops'
   FRONTEND_SERVICE_NAME: 'salon-frontend'
 
 permissions:
   contents: read
 
 jobs:
+  # Optional detect-changes (keeps parity with backend pipeline)
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.out.outputs.has_changes }}
+      timestamp: ${{ steps.out.outputs.timestamp }}
+      ecr_registry: ${{ steps.out.outputs.ecr_registry }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Emit outputs (frontend always considered changed)
+        id: out
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          ECR_REGISTRY=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "ecr_registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
+
   # ---------------------------
-  # Optional: run unit tests
+  # Unit Tests (optional)
   # ---------------------------
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    needs: [ detect-changes ]
+    if: needs.detect-changes.outputs.has_changes == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +60,10 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run tests (if defined)
         run: |
           if [ -f package.json ] && jq -r '.scripts.test // empty' package.json | grep -q '.'; then
             npm run test --silent || true
@@ -47,42 +72,36 @@ jobs:
           fi
 
   # ---------------------------
-  # Build Docker image
+  # Build (create image, do NOT push)
   # ---------------------------
   build:
-    name: Build & Push Image
+    name: Build
     runs-on: ubuntu-latest
-    needs: [ test ]
+    needs: [ detect-changes, test ]
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      full_image: ${{ steps.meta.outputs.full_image }}
+      latest_image: ${{ steps.meta.outputs.latest_image }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Generate image tags
+      - name: Generate image metadata
         id: meta
         run: |
           SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          ECR_REGISTRY=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          TIMESTAMP=${{ needs.detect-changes.outputs.timestamp }}
+          ECR_REGISTRY=${{ needs.detect-changes.outputs.ecr_registry }}
           IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
           FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
           LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
           echo "latest_image=${LATEST_IMAGE}" >> $GITHUB_OUTPUT
-          echo "ecr_registry=${ECR_REGISTRY}" >> $GITHUB_OUTPUT
 
       - name: Build Docker image (no push)
         uses: docker/build-push-action@v5
@@ -94,6 +113,8 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.full_image }}
             ${{ steps.meta.outputs.latest_image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_USER_API_BASE=${{ secrets.NEXT_PUBLIC_USER_API_BASE }}
             NEXT_PUBLIC_SERVICE_API_BASE=${{ secrets.NEXT_PUBLIC_SERVICE_API_BASE }}
@@ -114,50 +135,12 @@ jobs:
           retention-days: 1
 
   # ---------------------------
-  # Trivy scan (vulnerabilities)
-  # ---------------------------
-#   trivy:
-#     name: Trivy Scan
-#     runs-on: ubuntu-latest
-#     needs: [ build ]
-#     permissions:
-#       contents: read
-#       security-events: write
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
-
-#       - name: Download image artifact
-#         uses: actions/download-artifact@v4
-#         with:
-#           name: image-frontend
-
-#       - name: Load image
-#         run: gunzip -c image-frontend.tar.gz | docker load
-
-#       - name: Run Trivy (SARIF + Table)
-#         uses: aquasecurity/trivy-action@0.28.0
-#         with:
-#           image-ref: ${{ steps.build.outputs.full_image || format('{0}/{1}:{2}', needs.build.outputs.ecr_registry, env.FRONTEND_SERVICE_NAME, needs.build.outputs.image_tag) }}
-#           format: sarif
-#           output: trivy-results.sarif
-#           severity: CRITICAL,HIGH
-#           ignore-unfixed: true
-
-#       - name: Upload SARIF to GitHub (optional)
-#         uses: github/codeql-action/upload-sarif@v4
-#  if: always()
-#         with:
-#           sarif_file: trivy-results.sarif
-#           category: trivy-frontend
-
-  # ---------------------------
-  # Push to ECR
+  # Push to ECR (only on main push)
   # ---------------------------
   push-to-ecr:
     name: Push to ECR
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [ build ]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Configure AWS credentials
@@ -177,22 +160,30 @@ jobs:
 
       - name: Load and push image
         env:
-          ECR_REGISTRY: ${{ steps.build.outputs.ecr_registry || format('{0}.dkr.ecr.{1}.amazonaws.com', env.AWS_ACCOUNT_ID, env.AWS_REGION) }}
+          ECR_REGISTRY: ${{ needs.detect-changes.outputs.ecr_registry }}
         run: |
           gunzip -c image-frontend.tar.gz | docker load
+          # Recreate tag using current commit+timestamp (keeps parity with build stage)
           SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          TIMESTAMP=${{ needs.detect-changes.outputs.timestamp }}
           IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
           FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
           LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
-          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1) $FULL_IMAGE || true
-          docker push $FULL_IMAGE
-          docker tag $FULL_IMAGE $LATEST_IMAGE
-          docker push $LATEST_IMAGE
-          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_OUTPUT
+
+          # Attempt to find the locally loaded image and tag/push it
+          LOCAL_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1 || true)
+          if [ -n "$LOCAL_IMAGE" ]; then
+            docker tag "$LOCAL_IMAGE" "$FULL_IMAGE" || true
+          fi
+
+          docker push "$FULL_IMAGE"
+          docker tag "$FULL_IMAGE" "$LATEST_IMAGE"
+          docker push "$LATEST_IMAGE"
+          echo "full_image=$FULL_IMAGE" >> $GITHUB_OUTPUT
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   # ---------------------------
-  # Update GitOps repository
+  # Update GitOps repository (only on main push)
   # ---------------------------
   update-gitops:
     name: Update GitOps
@@ -207,15 +198,16 @@ jobs:
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
 
-      - name: Update image tag in deployment manifests
+      - name: Update deployment manifest image tag
         env:
           ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
         run: |
           cd gitops
           SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          TIMESTAMP=${{ needs.detect-changes.outputs.timestamp }}
           IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
           DEPLOY_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
+
           if [ -f "$DEPLOY_FILE" ]; then
             sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$DEPLOY_FILE"
             git config user.name "github-actions[bot]"
@@ -226,3 +218,21 @@ jobs:
           else
             echo "No deployment file found at $DEPLOY_FILE"
           fi
+
+  # ---------------------------
+  # Pipeline Summary
+  # ---------------------------
+  pipeline-summary:
+    name: Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [ detect-changes, test, build, push-to-ecr, update-gitops ]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Frontend CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image Tag: ${{ needs.build.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "ECR Registry: ${{ needs.detect-changes.outputs.ecr_registry }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Jobs run: detect-changes, test, build, push-to-ecr, update-gitops" >> $GITHUB_STEP_SUMMARY
