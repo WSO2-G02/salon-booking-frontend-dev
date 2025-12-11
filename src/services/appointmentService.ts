@@ -1,14 +1,18 @@
 export const API_BASE = process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE
 
 interface BookAppointmentData {
-  staff_id?: string
-  service_id: string
+  staff_id?: number
+  user_id?: number
+  appointment_date: string
+  service_id: number
   appointment_datetime: string
+  customer_notes: string
 }
 
 export async function bookAppointment(data: BookAppointmentData) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
-  const res = await fetch(`${API_BASE}/api/v1/appointments/book`, {
+  console.log(data)
+  const res = await fetch(`${API_BASE}/api/v1/appointments`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -39,4 +43,59 @@ export async function getAvailableSlots(staffId: number, serviceId: number, date
     date,
     available_slots: slots,
   }
+}
+
+export async function getUserAppointments(userId: number) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const res = await fetch(`${API_BASE}/api/v1/users/${userId}/appointments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  })
+  if (!res.ok) throw new Error((await res.json()).detail || 'Failed to fetch appointments')
+  return await res.json()
+}
+
+export async function getAllAppointments() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const res = await fetch(`${API_BASE}/api/v1/appointments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  })
+  if (!res.ok) throw new Error((await res.json()).detail || 'Failed to fetch appointments')
+  return await res.json()
+}
+
+
+export async function updateAppointment(appointmentId: number, data: Partial<BookAppointmentData>) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const res = await fetch(`${API_BASE}/api/v1/appointments/${appointmentId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error((await res.json()).detail || 'Failed to update appointment')
+  return await res.json()
+}
+
+// delete appointment
+export async function deleteAppointment(appointmentId: number) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const res = await fetch(`${API_BASE}/api/v1/appointments/${appointmentId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  })
+  if (!res.ok) throw new Error((await res.json()).detail || 'Failed to delete appointment')
+  return true
 }
