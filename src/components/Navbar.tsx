@@ -22,7 +22,6 @@ export default function Navbar() {
       typeof window !== "undefined"
         ? localStorage.getItem("access_token")
         : null;
-    console.log("Navbar token:", token);
     setIsLoggedIn(!!token);
   }, []);
 

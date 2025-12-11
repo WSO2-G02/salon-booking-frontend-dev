@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { userApiFetch } from "@/lib/userApi";
 import { ShieldCheck, ShieldAlert, User, Pencil } from "lucide-react";
-import EditProfileModal from "./EditProfileModal"
-
+import EditProfileModal from "./EditProfileModal";
+import { getUserProfile } from "@/services/userService";
 interface Profile {
   full_name?: string;
   username?: string;
@@ -28,21 +28,18 @@ const MOCK_PROFILE: Profile = {
 export default function ProfileHeader() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showEdit, setShowEdit] = useState(false);
-
-  async function load() {
+  const fetchUserProfile = async () => {
     try {
-      const res = await userApiFetch("/profile", { method: "GET" });
-      if (!res.ok) throw new Error("API failed");
-      const data = await res.json();
-      setProfile(data);
-    } catch {
-      // DEV BYPASS: Use mock data when API fails
-      setProfile(MOCK_PROFILE);
+      const profile = await getUserProfile();
+      console.log(profile);
+      setProfile(profile);
+    } catch (error) {
+      console.error("Failed to fetch user profile", error);
     }
-  }
+  };
 
   useEffect(() => {
-    load();
+    fetchUserProfile();
   }, []);
 
   if (!profile) {
@@ -63,7 +60,6 @@ export default function ProfileHeader() {
     <>
       <section className="py-20 bg-gradient-to-br from-slate-900 to-black text-white">
         <div className="max-w-5xl mx-auto px-6 text-center relative">
-
           {/* Edit Profile Button */}
           <button
             onClick={() => setShowEdit(true)}
@@ -84,7 +80,6 @@ export default function ProfileHeader() {
 
           {/* Badges */}
           <div className="flex justify-center gap-3 mt-4">
-
             <span className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-full text-sm">
               <User className="w-4 h-4" />
               {profile.email}
@@ -107,7 +102,11 @@ export default function ProfileHeader() {
 
       {/* EDIT MODAL */}
       {showEdit && (
-        <EditProfileModal profile={profile} onClose={() => setShowEdit(false)} onUpdated={load} />
+        <EditProfileModal
+          profile={profile}
+          onClose={() => setShowEdit(false)}
+          onUpdated={fetchUserProfile}
+        />
       )}
     </>
   );

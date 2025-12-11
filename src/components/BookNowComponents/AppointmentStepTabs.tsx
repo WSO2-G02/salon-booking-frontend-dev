@@ -9,7 +9,7 @@ export default function AppointmentStepTabs({ currentStep, setStep }: Props) {
   const steps = ['Select Service', 'Pick Date & Time', 'Confirm Payment']
 
   return (
-    <div className="flex justify-center items-center gap-4 my-6">
+    <div className="flex justify-center items-center gap-4 my-6 ">
       {steps.map((label, index) => {
         const stepNum = index + 1
         const isActive = currentStep === stepNum
@@ -23,7 +23,7 @@ export default function AppointmentStepTabs({ currentStep, setStep }: Props) {
               isActive
                 ? 'bg-black text-white border-black'
                 : isUnlocked
-                ? 'bg-white border-gray-400 hover:bg-gray-100'
+                ? 'bg-green-700 border-green-800 hover:bg-green-800'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
