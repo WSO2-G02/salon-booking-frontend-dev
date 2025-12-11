@@ -176,12 +176,13 @@ jobs:
           cache: true
           exit-code: '0'     # Fail pipeline if vulnerabilities found
 
-      - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload Trivy SARIF as artifact
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-frontend'
+          name: trivy-report-${{ matrix.service }}
+          path: trivy-results-${{ matrix.service }}.sarif
+          retention-days: 30
 
 
   # ---------------------------
