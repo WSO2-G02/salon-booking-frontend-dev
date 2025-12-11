@@ -1,15 +1,24 @@
 # ----------------------------
-# Builder
+# Builder Stage
 # ----------------------------
-FROM node:18-alpine AS builder
+FROM node:18-slim AS builder
 WORKDIR /app
 
+# Install build dependencies
+# (Slim uses Debian – must install libc dependencies for Next.js)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    build-essential \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json* yarn.lock* ./
+
 RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-# Accept build args for NEXT_PUBLIC_* envs
+# Build args passed from GitHub Actions
 ARG NEXT_PUBLIC_USER_API_BASE
 ARG NEXT_PUBLIC_SERVICE_API_BASE
 ARG NEXT_PUBLIC_STAFF_API_BASE
@@ -17,7 +26,7 @@ ARG NEXT_PUBLIC_APPOINTMENT_API_BASE
 ARG NEXT_PUBLIC_NOTIFICATION_API_BASE
 ARG NEXT_PUBLIC_ANALYTICS_API_BASE
 
-# Pass them into the build environment
+# Inject envs into Next build
 ENV NEXT_PUBLIC_USER_API_BASE=${NEXT_PUBLIC_USER_API_BASE}
 ENV NEXT_PUBLIC_SERVICE_API_BASE=${NEXT_PUBLIC_SERVICE_API_BASE}
 ENV NEXT_PUBLIC_STAFF_API_BASE=${NEXT_PUBLIC_STAFF_API_BASE}
@@ -25,24 +34,27 @@ ENV NEXT_PUBLIC_APPOINTMENT_API_BASE=${NEXT_PUBLIC_APPOINTMENT_API_BASE}
 ENV NEXT_PUBLIC_NOTIFICATION_API_BASE=${NEXT_PUBLIC_NOTIFICATION_API_BASE}
 ENV NEXT_PUBLIC_ANALYTICS_API_BASE=${NEXT_PUBLIC_ANALYTICS_API_BASE}
 
-ENV NEXT_DISABLE_ESLINT=true
-
 RUN npm run build
 
 # ----------------------------
-# Runner
+# Runner Stage (Production)
 # ----------------------------
-FROM node:18-alpine AS runner
+FROM node:18-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy standalone output
+# Install only prod dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev --legacy-peer-deps
+
+# Bring standalone server output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 
+# Start Next.js standalone server
 CMD ["node", "server.js"]
