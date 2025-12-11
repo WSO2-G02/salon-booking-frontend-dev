@@ -3,26 +3,36 @@
 import { Token } from "./auth";
 import { getValidAccessToken, refreshTokens } from "@/services/userService";
 
-// BASE URL for the SERVICES MANAGEMENT service
-const SERVICES_BASE =
+/* ============================================================
+   BASE URL NORMALIZATION
+   - Removes trailing slashes
+   - Automatically supports both:
+        http://localhost:8002
+        http://localhost:8002/api/v1
+   ============================================================ */
+
+const RAW_BASE =
   process.env.NEXT_PUBLIC_SERVICES_API_BASE ||
   "https://services-management.azurewebsites.net/api/v1";
 
-/**
- * Authenticated fetch against the SERVICES backend.
- *
- * - Adds `authorization: Bearer <access>` header if available
- * - If access token is missing or near expiry => refresh first
- * - If response is 401 => try refresh once, then retry request
- * - If refresh fails / expired => tokens cleared, 401 returned
- */
+const SERVICES_BASE = RAW_BASE.replace(/\/+$/, ""); // remove trailing slash
+
+/* ============================================================
+   MAIN AUTHENTICATED FETCH WRAPPER
+   ============================================================ */
 export async function servicesApiFetch(
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const url = `${SERVICES_BASE}${path}`;
+  // Ensure path begins with exactly ONE leading slash
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
-  // 1) Get a valid (refreshed if needed) access token
+  // Final request URL
+  const url = `${SERVICES_BASE}${cleanPath}`;
+
+  /* ---------------------------------------------
+     1) Get a valid token (refresh if needed)
+     --------------------------------------------- */
   const access = await getValidAccessToken();
 
   const headers: Record<string, string> = {
@@ -34,36 +44,41 @@ export async function servicesApiFetch(
   }
 
   if (options.method && options.method !== "GET") {
-    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    headers["Content-Type"] =
+      headers["Content-Type"] || "application/json";
   }
 
-  // 2) First attempt
-  const res = await fetch(url, { ...options, headers });
+  /* ---------------------------------------------
+     2) First attempt
+     --------------------------------------------- */
+  let res = await fetch(url, { ...options, headers });
 
   if (res.status !== 401) {
     return res;
   }
 
-  // 3) If 401 → try refresh ONCE (if refresh token still valid)
+  /* ---------------------------------------------
+     3) Access token expired → try refresh once
+     --------------------------------------------- */
   const refresh = Token.getRefresh();
   if (!refresh || Token.isRefreshExpired()) {
     Token.clear();
-    return res;
+    return res; // return original 401
   }
 
   let newAccess: string | undefined;
   try {
     const refreshed = await refreshTokens();
-    newAccess = refreshed.access_token as string | undefined;
+    newAccess = refreshed.access_token;
   } catch {
-    // refreshTokens already cleared on failure
-    return res;
+    return res; // refresh failed
   }
 
-  if (!newAccess) {
-    return res;
-  }
+  if (!newAccess) return res;
 
+  /* ---------------------------------------------
+     4) Retry request with new access token
+     --------------------------------------------- */
   const retryHeaders: Record<string, string> = {
     ...((options.headers as Record<string, string>) || {}),
     authorization: `Bearer ${newAccess}`,
@@ -74,6 +89,5 @@ export async function servicesApiFetch(
       retryHeaders["Content-Type"] || "application/json";
   }
 
-  // 4) Retry once with new token
   return fetch(url, { ...options, headers: retryHeaders });
 }

@@ -155,13 +155,39 @@ const MOCK_TOP_SERVICES: TopService[] = [
 ]
 
 const SERVICE_ENDPOINTS = [
-  { name: 'User Service', endpoint: 'https://user-service-salon.azurewebsites.net' },
-  { name: 'Appointment Service', endpoint: 'https://appointment-service-salon.azurewebsites.net' },
-  { name: 'Staff Service', endpoint: 'https://staff-service.azurewebsites.net' },
-  { name: 'Services Management', endpoint: 'https://services-management.azurewebsites.net' },
-  { name: 'Analytics Service', endpoint: 'https://analytics-report-service-salon.azurewebsites.net' },
-  { name: 'Notification Service', endpoint: 'https://notification-service-salon.azurewebsites.net' },
-]
+  {
+    name: "User Service",
+    endpoint: process.env.NEXT_PUBLIC_USER_API_BASE || "",
+    healthPath: "/api/v1/health",
+  },
+  {
+    name: "Appointment Service",
+    endpoint: process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE || "",
+    healthPath: "/api/v1/health",
+  },
+  {
+    name: "Staff Service",
+    endpoint: process.env.NEXT_PUBLIC_STAFF_API_BASE || "",
+    healthPath: "/api/v1/health",
+  },
+  {
+    name: "Services Management",
+    endpoint: process.env.NEXT_PUBLIC_SERVICES_API_BASE || "",
+    healthPath: "/api/v1/health",
+  },
+  {
+    name: "Analytics Service",
+    endpoint: process.env.NEXT_PUBLIC_ANALYTICS_API_BASE || "",
+    healthPath: "/api/v1/analytics/health",
+  },
+  {
+    name: "Notification Service",
+    endpoint: process.env.NEXT_PUBLIC_NOTIFICATION_API_BASE || "",
+    healthPath: "/api/v1/health",
+  },
+];
+
+
 
 // =====================================================
 // COMPONENT
@@ -188,28 +214,33 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
    * Check health of all backend services
    */
   const checkServiceHealth = useCallback(async () => {
-    const results: ServiceStatus[] = []
+  const results: ServiceStatus[] = [];
 
-    for (const service of SERVICE_ENDPOINTS) {
-      const start = Date.now()
-      try {
-        const res = await fetch(`${service.endpoint}/api/v1/health`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(5000),
-        })
-        const responseTime = Date.now() - start
-        results.push({
-          ...service,
-          status: res.ok ? 'online' : 'offline',
-          responseTime,
-        })
-      } catch {
-        results.push({ ...service, status: 'offline' })
-      }
+  for (const service of SERVICE_ENDPOINTS) {
+    const start = Date.now();
+    const url = `${service.endpoint}${service.healthPath}`;
+
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        signal: AbortSignal.timeout(5000),
+      });
+
+      const responseTime = Date.now() - start;
+
+      results.push({
+        ...service,
+        status: res.ok ? "online" : "offline",
+        responseTime,
+      });
+    } catch {
+      results.push({ ...service, status: "offline" });
     }
+  }
 
-    setServiceHealth(results)
-  }, [])
+  setServiceHealth(results);
+}, []);
+
 
   /**
    * Load overview data from APIs
