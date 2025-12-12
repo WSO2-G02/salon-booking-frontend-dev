@@ -197,35 +197,35 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
+  
       - uses: aws-actions/amazon-ecr-login@v2
-
+  
       - uses: actions/download-artifact@v4
         with:
           name: image-frontend
-
-      - name: Load + Tag + Push (Backend style)
+  
+      - name: Load + Tag + Push 
         id: push
         env:
           REG: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          TIMESTAMP: ${{ needs.detect-changes.outputs.timestamp }}
         run: |
           gunzip -c image-frontend.tar.gz | docker load
-
+  
           SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
           TAG="${SHORT_SHA}-${TIMESTAMP}"
-
+  
           SRC_IMG=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'frontend' | head -n1)
-
+  
           TARGET="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:${TAG}"
           LATEST="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:latest"
-
+  
           docker tag "$SRC_IMG" "$TARGET"
           docker push "$TARGET"
-
+  
           docker tag "$TARGET" "$LATEST"
           docker push "$LATEST"
-
+  
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
 # ---------------------------------------------------------------
@@ -242,22 +242,22 @@ jobs:
           repository: ${{ env.GITOPS_REPO }}
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
-
-      - name: Patch deployment.yaml
+  
+      - name: Update deployment manifest
         env:
           REG: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           SERVICE: ${{ env.FRONTEND_SERVICE_NAME }}
+          TIMESTAMP: ${{ needs.detect-changes.outputs.timestamp }}
         run: |
           cd gitops
-
+  
           SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
           TAG="${SHORT_SHA}-${TIMESTAMP}"
-
+  
           FILE="staging/${SERVICE}/deployment.yaml"
-
+  
           sed -i "s|image:.*|image: ${REG}/${SERVICE}:${TAG}|g" "$FILE"
-
+  
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add "$FILE"
