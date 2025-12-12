@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: eu-north-1
-  AWS_ACCOUNT_ID: '024955634588'     # replace if different
+  AWS_ACCOUNT_ID: '024955634588'     
   GITOPS_REPO: 'WSO2-G02/salon-gitops'
   FRONTEND_SERVICE_NAME: 'frontend'
 
