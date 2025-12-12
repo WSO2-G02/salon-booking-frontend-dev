@@ -218,7 +218,7 @@ jobs:
         run: |
           gunzip -c image-frontend.tar.gz | docker load
 
-          SRC_IMG="${{ needs.build.outputs.full_image }}"
+          SRC_IMG=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1)
           TARGET="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:${TAG}"
           LATEST="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:latest"
 
