@@ -218,7 +218,7 @@ jobs:
           docker tag "$SRC_IMG" "$TARGET"
           docker push "$TARGET"
 
-          docker tag "$LATEST" "$TARGET"
+          docker tag "$TARGET" "$LATEST" 
           docker push "$LATEST"
 
           echo "tag=$TAG" >> $GITHUB_OUTPUT
