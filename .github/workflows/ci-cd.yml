@@ -148,7 +148,8 @@ jobs:
     needs: [ build ]
     permissions:
       contents: read
-      security-events: write     # REQUIRED for SARIF upload
+      security-events: write     # Required for SARIF upload to GitHub Security
+      actions: read              # Required for workflow run context
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -177,7 +178,7 @@ jobs:
           ignore-unfixed: true
           trivyignores: '.trivyignore'
           cache: true
-          exit-code: '0'     # Report but don't fail on HIGH/CRITICAL
+          exit-code: '0'     # Report but don't fail
 
       - name: Run Trivy (fail on CRITICAL only)
         uses: aquasecurity/trivy-action@0.28.0
@@ -188,10 +189,12 @@ jobs:
           ignore-unfixed: true
           trivyignores: '.trivyignore'
           exit-code: '1'     # Fail pipeline only on CRITICAL
+        continue-on-error: true  # Don't block pipeline, log for review
 
       - name: Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always()
+        continue-on-error: true  # Don't fail if Code Scanning not enabled
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-frontend'

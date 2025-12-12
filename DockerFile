@@ -45,6 +45,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Security: Upgrade OS packages to fix known vulnerabilities
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 # Install only prod dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --legacy-peer-deps
