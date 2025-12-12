@@ -176,7 +176,7 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
-          trivyignores: '.trivyignore'
+          #trivyignores: '.trivyignore'
           cache: true
           exit-code: '0'     # Report but don't fail
 
@@ -187,7 +187,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL'
           ignore-unfixed: true
-          trivyignores: '.trivyignore'
+          #trivyignores: '.trivyignore'
           exit-code: '1'     # Fail pipeline only on CRITICAL
         continue-on-error: true  # Don't block pipeline, log for review
 
