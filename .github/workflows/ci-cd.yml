@@ -215,20 +215,35 @@ jobs:
         env:
           REG: ${{ needs.detect-changes.outputs.ecr_registry }}
           TAG: ${{ needs.build.outputs.image_tag }}
-        run: |
-          gunzip -c image-frontend.tar.gz | docker load
-
-          SRC_IMG=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1)
-          TARGET="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:${TAG}"
-          LATEST="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:latest"
-
-          docker tag "$SRC_IMG" "$TARGET"
-          docker push "$TARGET"
-
-          docker tag "$TARGET" "$LATEST"
-          docker push "$LATEST"
-
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          run: |
+            gunzip -c image-frontend.tar.gz | docker load
+            
+            REG="${{ needs.detect-changes.outputs.ecr_registry }}"
+            SHORT_SHA="${GITHUB_SHA::8}"
+            TAG="${SHORT_SHA}-${{ needs.detect-changes.outputs.timestamp }}"
+            
+           
+            SRC_IMG=$(docker images --format '{{.Repository}}:{{.Tag}}' \
+              | grep "^${REG}/${{ env.FRONTEND_SERVICE_NAME }}:" \
+              | head -n1)
+            
+            if [ -z "$SRC_IMG" ]; then
+              echo "ERROR: Could not locate loaded image in Docker."
+              docker images
+              exit 1
+            fi
+            
+            echo "Using loaded image: $SRC_IMG"
+            
+            TARGET="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:${TAG}"
+            LATEST="${REG}/${{ env.FRONTEND_SERVICE_NAME }}:latest"
+            
+            docker tag "$SRC_IMG" "$TARGET"
+            docker push "$TARGET"
+            
+            docker tag "$TARGET" "$LATEST"
+            docker push "$LATEST"
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
 
 # ======================================================================
