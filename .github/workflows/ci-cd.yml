@@ -235,9 +235,7 @@ jobs:
         run: |
           gunzip -c image-frontend.tar.gz | docker load
   
-          SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
+          IMAGE_TAG=${{ needs.build.outputs.image_tag }}
   
           FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
           LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
@@ -282,9 +280,7 @@ jobs:
         run: |
           cd gitops
   
-          SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
+          IMAGE_TAG=${{ needs.build.outputs.image_tag }}
   
           DEPLOY_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
   
