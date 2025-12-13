@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { userApiFetch } from "@/lib/userApi";
 import { Mail, Phone, Calendar } from "lucide-react";
 import { getUserProfile } from "@/services/userService";
-
 
 interface Profile {
   email?: string;
@@ -18,33 +16,23 @@ export default function ProfileDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    try {
-      const res = await userApiFetch("/api/v1/profile");
-      if (!res.ok) throw new Error("Failed to fetch profile");
-      setProfile(await res.json());
-    } catch {
-      setError("Unable to load profile details.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-        const fetchUserProfile = async () => {
-          try {
-            const profile = await getUserProfile();
-            
-            setProfile(profile);
-          } catch (error) {
-            console.error("Failed to fetch user profile", error);
-          }
-        };
-        fetchUserProfile();
+    async function fetchProfile() {
+      try {
+        const data = await getUserProfile();
+        setProfile(data);
+      } catch (err) {
+        setError("Unable to load profile details.");
+      } finally {
+        setLoading(false); // ✅ VERY IMPORTANT
+      }
+    }
+
+    fetchProfile();
   }, []);
 
   // ---------------------------------------------------
-  // 🟡 LUXURY SKELETON LOADER
+  // LUXURY SKELETON LOADER
   // ---------------------------------------------------
   if (loading) {
     return (

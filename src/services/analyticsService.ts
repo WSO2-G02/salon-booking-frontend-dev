@@ -229,3 +229,107 @@ export async function getAnalyticsData(start: string, end: string) {
     },
   };
 }
+
+
+// =====================================================
+// WEEKLY REVENUE (DERIVED FROM DAILY REVENUE)
+// =====================================================
+
+interface DailyRevenueAPI {
+  date: string
+  revenue: number
+  appointment_count: number
+  completed_count: number
+}
+
+interface WeeklyRevenue {
+  day: string
+  revenue: number
+}
+
+/**
+ * Get last 7 days revenue (frontend-safe)
+ */
+export async function getWeeklyRevenue(): Promise<{
+  data: { day: string; revenue: number }[]
+  totalRevenue: number
+  changePercent: number
+}> {
+  // 1️⃣ Fetch raw API data
+  const daily: { date: string; revenue: number }[] = await apiRequest(
+    "/api/v1/analytics/revenue/daily",
+    { limit: "7" }
+  )
+
+  // 2️⃣ Filter → only last 7 calendar days
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const sevenDaysAgo = new Date(today)
+  sevenDaysAgo.setDate(today.getDate() - 6)
+
+  const filtered = daily.filter(d => {
+    const date = new Date(d.date)
+    return date >= sevenDaysAgo && date <= today
+  })
+
+  // 3️⃣ Normalize → ensure all 7 days exist
+  const normalized = normalizeLast7Days(filtered)
+
+  // 4️⃣ Chart-ready data
+  const chartData = normalized.map(d => ({
+    day: d.day,
+    revenue: d.revenue,
+  }))
+
+  // 5️⃣ Totals
+  const totalRevenue = chartData.reduce((s, d) => s + d.revenue, 0)
+
+  // 6️⃣ Trend (first vs last day)
+  let changePercent = 0
+  if (chartData.length >= 2) {
+    const first = chartData[0].revenue
+    const last = chartData[chartData.length - 1].revenue
+    if (first > 0) {
+      changePercent = ((last - first) / first) * 100
+    }
+  }
+
+  return {
+    data: chartData,
+    totalRevenue,
+    changePercent: Number(changePercent.toFixed(1)),
+  }
+}
+
+// utils/revenueUtils.ts
+export function normalizeLast7Days(
+  apiData: { date: string; revenue: number }[]
+) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Create map for quick lookup
+  const revenueMap = new Map<string, number>()
+  apiData.forEach((d) => {
+    revenueMap.set(d.date, d.revenue)
+  })
+
+  // Build last 7 calendar days
+  const result = []
+
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(today)
+    day.setDate(today.getDate() - i)
+
+    const isoDate = day.toISOString().split("T")[0]
+
+    result.push({
+      date: isoDate,
+      day: day.toLocaleDateString("en-US", { weekday: "short" }),
+      revenue: revenueMap.get(isoDate) || 0,
+    })
+  }
+
+  return result
+}

@@ -1,44 +1,27 @@
 /**
  * OverviewTab Component
- * 
+ *
  * Main dashboard overview displaying key metrics and summaries.
  * Aggregates data from multiple microservices to provide a quick snapshot.
- * 
- * Features:
- * - Key statistics cards (appointments, revenue, customers, services)
- * - Today's schedule
- * - Recent activity feed
- * - Revenue mini chart
- * - Top services
- * - Service health monitoring
- * - Quick action buttons
- * 
- * API Endpoints Used:
- * - Analytics: /api/v1/analytics/dashboard
- * - Analytics: /api/v1/analytics/revenue/summary
- * - Analytics: /api/v1/analytics/appointments/summary
- * - Analytics: /api/v1/analytics/services/popularity
- * - Appointments: /api/v1/appointments/date/{today}
- * - Health checks for all services
- * 
+ *
  * @component
  */
 
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  Scissors, 
+import {
+  Calendar,
+  DollarSign,
+  Users,
+  Scissors,
   AlertCircle,
   Wifi,
-  LayoutDashboard
+  LayoutDashboard,
 } from 'lucide-react'
 import { showToast } from '@/components/Toast'
 
-// Import sub-components
+// Sub-components
 import StatCard from './OverviewSection/StatCard'
 import QuickActionsCard from './OverviewSection/QuickActionsCard'
 import RecentActivityCard from './OverviewSection/RecentActivityCard'
@@ -46,6 +29,12 @@ import TodayScheduleCard from './OverviewSection/TodayScheduleCard'
 import ServiceHealthCard from './OverviewSection/ServiceHealthCard'
 import RevenueChartMini from './OverviewSection/RevenueChartMini'
 import TopServicesCard from './OverviewSection/TopServicesCard'
+
+// Services
+import {
+  getWeeklyRevenue,
+  normalizeLast7Days,
+} from '@/services/analyticsService'
 
 // =====================================================
 // TYPE DEFINITIONS
@@ -99,15 +88,15 @@ interface TopService {
 interface DailyRevenue {
   day: string
   revenue: number
+  date: string // ✅ REQUIRED for date range
 }
 
 interface OverviewTabProps {
-  /** Callback to change active tab */
   onTabChange?: (tab: string) => void
 }
 
 // =====================================================
-// MOCK DATA (Used when API is unavailable)
+// MOCK DATA
 // =====================================================
 
 const MOCK_STATS: OverviewStats = {
@@ -136,16 +125,6 @@ const MOCK_ACTIVITIES: Activity[] = [
   { id: 5, type: 'appointment', customerName: 'Michael Brown', serviceName: 'Manicure', status: 'confirmed', time: '3 hours ago' },
 ]
 
-const MOCK_REVENUE_DATA: DailyRevenue[] = [
-  { day: 'Mon', revenue: 85000 },
-  { day: 'Tue', revenue: 92000 },
-  { day: 'Wed', revenue: 78000 },
-  { day: 'Thu', revenue: 105000 },
-  { day: 'Fri', revenue: 125000 },
-  { day: 'Sat', revenue: 145000 },
-  { day: 'Sun', revenue: 68000 },
-]
-
 const MOCK_TOP_SERVICES: TopService[] = [
   { rank: 1, name: 'Hair Styling', category: 'Hair Care', bookings: 145, revenue: 580000 },
   { rank: 2, name: 'Bridal Makeup', category: 'Bridal', bookings: 32, revenue: 480000 },
@@ -155,280 +134,170 @@ const MOCK_TOP_SERVICES: TopService[] = [
 ]
 
 const SERVICE_ENDPOINTS = [
-  {
-    name: "User Service",
-    endpoint: process.env.NEXT_PUBLIC_USER_API_BASE || "",
-    healthPath: "/api/v1/health",
-  },
-  {
-    name: "Appointment Service",
-    endpoint: process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE || "",
-    healthPath: "/api/v1/health",
-  },
-  {
-    name: "Staff Service",
-    endpoint: process.env.NEXT_PUBLIC_STAFF_API_BASE || "",
-    healthPath: "/api/v1/health",
-  },
-  {
-    name: "Services Management",
-    endpoint: process.env.NEXT_PUBLIC_SERVICES_API_BASE || "",
-    healthPath: "/api/v1/health",
-  },
-  {
-    name: "Analytics Service",
-    endpoint: process.env.NEXT_PUBLIC_ANALYTICS_API_BASE || "",
-    healthPath: "/api/v1/analytics/health",
-  },
-  {
-    name: "Notification Service",
-    endpoint: process.env.NEXT_PUBLIC_NOTIFICATION_API_BASE || "",
-    healthPath: "/api/v1/health",
-  },
-];
-
-
+  { name: 'User Service', endpoint: process.env.NEXT_PUBLIC_USER_API_BASE || '', healthPath: '/api/v1/health' },
+  { name: 'Appointment Service', endpoint: process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE || '', healthPath: '/api/v1/health' },
+  { name: 'Staff Service', endpoint: process.env.NEXT_PUBLIC_STAFF_API_BASE || '', healthPath: '/api/v1/health' },
+  { name: 'Services Management', endpoint: process.env.NEXT_PUBLIC_SERVICES_API_BASE || '', healthPath: '/api/v1/health' },
+  { name: 'Analytics Service', endpoint: process.env.NEXT_PUBLIC_ANALYTICS_API_BASE || '', healthPath: '/api/v1/analytics/health' },
+  { name: 'Notification Service', endpoint: process.env.NEXT_PUBLIC_NOTIFICATION_API_BASE || '', healthPath: '/api/v1/health' },
+]
 
 // =====================================================
 // COMPONENT
 // =====================================================
 
 export default function OverviewTab({ onTabChange }: OverviewTabProps) {
-  // State
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<OverviewStats>(MOCK_STATS)
-  const [schedule, setSchedule] = useState<ScheduleItem[]>(MOCK_SCHEDULE)
-  const [activities, setActivities] = useState<Activity[]>(MOCK_ACTIVITIES)
-  const [revenueData, setRevenueData] = useState<DailyRevenue[]>(MOCK_REVENUE_DATA)
-  const [topServices, setTopServices] = useState<TopService[]>(MOCK_TOP_SERVICES)
+  const [schedule, setSchedule] = useState(MOCK_SCHEDULE)
+  const [activities, setActivities] = useState(MOCK_ACTIVITIES)
+  const [topServices, setTopServices] = useState(MOCK_TOP_SERVICES)
+  const [revenueData, setRevenueData] = useState<DailyRevenue[]>([])
   const [serviceHealth, setServiceHealth] = useState<ServiceStatus[]>(
-    SERVICE_ENDPOINTS.map((s) => ({ ...s, status: 'checking' as const }))
+    SERVICE_ENDPOINTS.map((s) => ({ ...s, status: 'checking' }))
   )
   const [error, setError] = useState<string | null>(null)
 
   // =====================================================
-  // DATA FETCHING
+  // SERVICE HEALTH
   // =====================================================
 
-  /**
-   * Check health of all backend services
-   */
   const checkServiceHealth = useCallback(async () => {
-  const results: ServiceStatus[] = [];
+    const results: ServiceStatus[] = []
 
-  for (const service of SERVICE_ENDPOINTS) {
-    const start = Date.now();
-    const url = `${service.endpoint}${service.healthPath}`;
-
-    try {
-      const res = await fetch(url, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-
-      const responseTime = Date.now() - start;
-
-      results.push({
-        ...service,
-        status: res.ok ? "online" : "offline",
-        responseTime,
-      });
-    } catch {
-      results.push({ ...service, status: "offline" });
+    for (const service of SERVICE_ENDPOINTS) {
+      const start = Date.now()
+      try {
+        const res = await fetch(`${service.endpoint}${service.healthPath}`, {
+          signal: AbortSignal.timeout(5000),
+        })
+        results.push({
+          ...service,
+          status: res.ok ? 'online' : 'offline',
+          responseTime: Date.now() - start,
+        })
+      } catch {
+        results.push({ ...service, status: 'offline' })
+      }
     }
-  }
 
-  setServiceHealth(results);
-}, []);
+    setServiceHealth(results)
+  }, [])
 
+  // =====================================================
+  // LOAD DATA
+  // =====================================================
 
-  /**
-   * Load overview data from APIs
-   */
   const loadData = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
-      // In a real implementation, we would fetch from actual APIs:
-      // const dashboardRes = await analyticsApiFetch('/api/v1/analytics/dashboard')
-      // const appointmentsRes = await appointmentApiFetch('/api/v1/appointments/date/today')
-      
-      // For now, simulate API delay and use mock data
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      const weekly = await getWeeklyRevenue()
 
-      // Set mock data (replace with actual API calls when backend is ready)
-      setStats(MOCK_STATS)
+      const normalized = normalizeLast7Days(
+        weekly.data.map((d) => ({
+          date: d.date!,
+          revenue: d.revenue,
+        }))
+      )
+
+      setRevenueData(
+        normalized.map((d) => ({
+          day: d.day,
+          revenue: d.revenue,
+          date: d.date,
+        }))
+      )
+
+      setStats((prev) => ({
+        ...prev,
+        totalRevenue: weekly.totalRevenue,
+        revenueTrend: weekly.changePercent,
+      }))
+
       setSchedule(MOCK_SCHEDULE)
       setActivities(MOCK_ACTIVITIES)
-      setRevenueData(MOCK_REVENUE_DATA)
       setTopServices(MOCK_TOP_SERVICES)
 
-      // Check service health
       await checkServiceHealth()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load dashboard data'
-      setError(message)
-      showToast(message, 'error')
+      const msg = err instanceof Error ? err.message : 'Failed to load dashboard'
+      setError(msg)
+      showToast(msg, 'error')
     } finally {
       setLoading(false)
     }
   }, [checkServiceHealth])
 
-  /**
-   * Initial data load
-   */
   useEffect(() => {
     loadData()
   }, [loadData])
-
-  // =====================================================
-  // TAB CHANGE HANDLER
-  // =====================================================
-
-  const handleTabChange = (tab: string) => {
-    if (onTabChange) {
-      onTabChange(tab)
-    }
-  }
-
-  // =====================================================
-  // ERROR STATE
-  // =====================================================
 
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Unable to Load Dashboard</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">
+          Unable to Load Dashboard
+        </h2>
         <p className="text-gray-600 mb-4">{error}</p>
-        <button
-          onClick={loadData}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-        >
-          Retry
-        </button>
       </div>
     )
   }
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <div className="space-y-6">
-      {/* ================================================= */}
-      {/* HEADER SECTION                                   */}
-      {/* ================================================= */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          {/* Title with icon */}
-          <div className="flex items-center space-x-3">
-            <LayoutDashboard size={28} className="text-red-600" />
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">Welcome back, Admin!</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Here&apos;s what&apos;s happening at Aurora Salon today
-              </p>
-            </div>
+      {/* HEADER */}
+      <div className="bg-white rounded-lg shadow-md p-6 flex justify-between">
+        <div className="flex items-center gap-3">
+          <LayoutDashboard size={28} className="text-red-600" />
+          <div>
+            <h2 className="text-2xl font-bold">Welcome back, Admin!</h2>
+            <p className="text-sm text-gray-600">
+              Here's what's happening today
+            </p>
           </div>
-          
-          {/* Service Status Indicator */}
-          <div className="flex items-center gap-2 text-sm px-4 py-2 bg-gray-50 rounded-lg">
-            <Wifi size={16} className={serviceHealth.every(s => s.status === 'online') ? 'text-green-500' : 'text-yellow-500'} />
-            <span className="text-gray-600">
-              {serviceHealth.filter(s => s.status === 'online').length}/{serviceHealth.length} services online
-            </span>
-          </div>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded">
+          <Wifi size={16} />
+          {serviceHealth.filter((s) => s.status === 'online').length}/
+          {serviceHealth.length} services online
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          Icon={Calendar}
-          value={stats.todayAppointments}
-          label="Today's Appointments"
-          change={stats.appointmentsTrend}
-          bgColor="bg-blue-50"
-          iconColor="text-blue-600"
-          loading={loading}
-        />
-        <StatCard
-          Icon={DollarSign}
-          value={`LKR ${(stats.totalRevenue / 1000).toFixed(0)}K`}
-          label="Total Revenue"
-          change={stats.revenueTrend}
-          bgColor="bg-green-50"
-          iconColor="text-green-600"
-          loading={loading}
-        />
-        <StatCard
-          Icon={Users}
-          value={stats.totalCustomers}
-          label="Total Customers"
-          change={stats.customersTrend}
-          bgColor="bg-purple-50"
-          iconColor="text-purple-600"
-          loading={loading}
-        />
-        <StatCard
-          Icon={Scissors}
-          value={stats.activeServices}
-          label="Active Services"
-          bgColor="bg-orange-50"
-          iconColor="text-orange-600"
-          loading={loading}
-        />
+        <StatCard Icon={Calendar} value={stats.todayAppointments} label="Today's Appointments" loading={loading} />
+        <StatCard Icon={DollarSign} value={`LKR ${(stats.totalRevenue / 1000).toFixed(0)}K`} label="Total Revenue" loading={loading} />
+        <StatCard Icon={Users} value={stats.totalCustomers} label="Customers" loading={loading} />
+        <StatCard Icon={Scissors} value={stats.activeServices} label="Services" loading={loading} />
       </div>
 
-      {/* Main Content Grid */}
+      {/* CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Schedule & Activity */}
         <div className="lg:col-span-2 space-y-6">
           <TodayScheduleCard schedule={schedule} loading={loading} />
           <RecentActivityCard activities={activities} loading={loading} />
         </div>
 
-        {/* Right Column - Charts & Quick Actions */}
         <div className="space-y-6">
           <RevenueChartMini
             data={revenueData}
-            totalRevenue={revenueData.reduce((sum, d) => sum + d.revenue, 0)}
+            totalRevenue={stats.totalRevenue}
             changePercent={stats.revenueTrend}
             loading={loading}
           />
-          <QuickActionsCard onTabChange={handleTabChange} />
+          <QuickActionsCard onTabChange={onTabChange} />
           <TopServicesCard services={topServices} loading={loading} />
         </div>
       </div>
 
-      {/* Service Health Section */}
       <ServiceHealthCard
         services={serviceHealth}
         loading={loading}
         onRefresh={checkServiceHealth}
       />
-
-      {/* API Integration Notice */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex items-start gap-3">
-          <AlertCircle size={24} className="text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">API Integration Notice</h3>
-            <p className="text-blue-700 text-sm leading-relaxed">
-              The Overview dashboard is currently displaying mock data for demonstration purposes.
-              Once the backend APIs are fully connected, this dashboard will show real-time data from:
-            </p>
-            <ul className="text-blue-700 text-sm mt-2 ml-4 list-disc space-y-1">
-              <li><strong>Analytics Service:</strong> Dashboard metrics, revenue summary, service popularity</li>
-              <li><strong>Appointment Service:</strong> Today&apos;s schedule and recent activities</li>
-              <li><strong>Health Endpoints:</strong> Service status monitoring</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
