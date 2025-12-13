@@ -33,7 +33,7 @@ export default function EditProfileModal({ profile, onClose, onUpdated }: EditPr
     e.preventDefault();
     setSaving(true);
 
-    const res = await userApiFetch("/profile", {
+    const res = await userApiFetch("/api/v1/profile", {
       method: "PUT",
       body: JSON.stringify(form),
     });

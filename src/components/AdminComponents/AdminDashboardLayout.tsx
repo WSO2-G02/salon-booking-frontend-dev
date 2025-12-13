@@ -8,6 +8,7 @@ import ReportsAnalyticsTab from './ReportsAnalyticsTab'
 import StaffManagementTab from './StaffManagementTab'
 import ServicesManagementTab from './ServicesManagementTab'
 import CustomersManagementTab from './CustomersManagementTab'
+import AppointmentsTab from './AppointmentsTab'
 
 type TabType = 'overview' | 'reports' | 'appointments' | 'services' | 'staff' | 'customers'
 
@@ -88,15 +89,7 @@ export default function AdminDashboardLayout() {
 
           {activeTab === 'reports' && <ReportsAnalyticsTab />}
 
-          {activeTab === 'appointments' && (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <div className="flex items-center justify-center mb-4">
-                <Calendar size={32} className="text-red-600 mr-3" />
-                <h2 className="text-2xl font-bold text-gray-800">Appointments Management</h2>
-              </div>
-              <p className="text-gray-600">Appointments tab content will be implemented here.</p>
-            </div>
-          )}
+          {activeTab === 'appointments' && <AppointmentsTab/>}
 
           {activeTab === 'services' && <ServicesManagementTab />}
 

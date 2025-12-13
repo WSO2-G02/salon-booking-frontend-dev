@@ -1,19 +1,6 @@
-/**
- * RevenueChart Component
- * 
- * Displays revenue breakdown by service category as a vertical bar chart.
- * Data fetched from /api/v1/reports/revenue endpoint.
- * 
- * Features:
- * - Responsive container
- * - Red bars matching brand color
- * - Tooltips with LKR formatting
- * - Angled labels for readability
- * 
- * @component
- */
+"use client";
 
-import { BarChart3 } from 'lucide-react'
+import { BarChart3 } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -23,19 +10,44 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from 'recharts'
+} from "recharts";
+
+/* -----------------------------------------------------
+   ⭐ Skeleton Loader for RevenueChart
+----------------------------------------------------- */
+function RevenueChartSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+      {/* Header Skeleton */}
+      <div className="flex items-center mb-4">
+        <div className="w-6 h-6 bg-gray-300 rounded mr-3"></div>
+        <div className="h-5 w-48 bg-gray-300 rounded"></div>
+      </div>
+
+      {/* Chart Skeleton */}
+      <div className="w-full h-[300px] bg-gray-200 rounded-lg"></div>
+    </div>
+  );
+}
+
+/* -----------------------------------------------------
+   ⭐ Actual RevenueChart Component
+----------------------------------------------------- */
 
 interface RevenueService {
-  service_name: string
-  total_revenue: number
+  service_name: string;
+  total_revenue: number;
 }
 
 interface RevenueChartProps {
-  /** Array of services with revenue data */
-  data: RevenueService[]
+  data: RevenueService[];
+  loading?: boolean; // <--- NEW
 }
 
-export default function RevenueChart({ data }: RevenueChartProps) {
+export default function RevenueChart({ data, loading = false }: RevenueChartProps) {
+  // Show skeleton instantly while waiting for data
+  if (loading) return <RevenueChartSkeleton />;
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {/* Chart header */}
@@ -43,7 +55,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         <BarChart3 size={24} className="mr-2 text-red-600" />
         Revenue by Service Category
       </h3>
-      
+
       {/* Responsive chart container */}
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
@@ -52,37 +64,36 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         >
           {/* Grid lines */}
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          
-          {/* X-axis with angled labels */}
+
+          {/* X-axis */}
           <XAxis
             dataKey="service_name"
             angle={-45}
             textAnchor="end"
             height={100}
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            tick={{ fill: "#6b7280", fontSize: 12 }}
           />
-          
-          {/* Y-axis with abbreviated numbers (e.g., 500k) */}
+
+          {/* Y-axis */}
           <YAxis
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            tick={{ fill: "#6b7280", fontSize: 12 }}
             tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
           />
-          
-          {/* Interactive tooltip */}
+
+          {/* Tooltip */}
           <Tooltip
-            formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Revenue']}
+            formatter={(value: number) => [`LKR ${value.toLocaleString()}`, "Revenue"]}
             contentStyle={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
             }}
           />
-          
-          {/* Chart legend */}
-          <Legend wrapperStyle={{ paddingTop: '20px' }} />
-          
-          {/* Bar with brand color and rounded corners */}
+
+          <Legend wrapperStyle={{ paddingTop: "20px" }} />
+
+          {/* Bar styling */}
           <Bar
             dataKey="total_revenue"
             fill="#DC2626"
@@ -92,5 +103,5 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         </BarChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
