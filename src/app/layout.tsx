@@ -16,10 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Aurora Glam | Luxury Salon",
   description: "Experience the elegance of Aurora Salon - where expert care meets luxurious services for a transformative beauty experience in Sri Lanka.",
-  keywords: ["salon", "spa", "beauty", "hair", "nails", "skincare", "Aurora", "Sri Lanka", "luxury"],
+  keywords: ["salon", "beauty", "hair", "nails", "skincare", "Aurora", "Sri Lanka", "luxury"],
   authors: [{ name: "Aurora Glam" }],
   openGraph: {
-    title: "Aurora Glam | Luxury Salon & Spa",
+    title: "Aurora Glam | Luxury Salon",
     description: "Where expert care meets luxurious services for a transformative beauty experience in Sri Lanka.",
     type: "website",
     locale: "en_US",
