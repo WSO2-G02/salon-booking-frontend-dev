@@ -47,16 +47,96 @@ async function apiRequest<T>(
 }
 
 // =====================================================
-// TYPE DEFINITIONS (no changes)
+// TYPE DEFINITIONS
 // =====================================================
-// export * from "./analyticsTypes"; // You can also keep your types in this file
-// (All your interfaces remain exactly the same)
+
+export interface RevenueSummary {
+  total_revenue: number;
+  average_revenue_per_appointment: number;
+  growth_percentage?: number;
+}
+
+export interface ServiceRevenue {
+  service_name: string;
+  total_revenue: number;
+}
+
+export interface ServicePopularity {
+  service_name: string;
+  category?: string;
+  booking_count: number;
+}
+
+export interface AppointmentSummary {
+  total_appointments: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  pending: number;
+}
+
+export interface StaffPerformance {
+  staff_name: string;
+  position?: string;
+  completed_appointments: number;
+  total_revenue: number;
+}
+
+export interface PeakHour {
+  hour_label: string;
+  booking_count: number;
+}
+
+export interface CustomerRetention {
+  total_customers: number;
+  retention_rate: number;
+}
+
+export interface AnalyticsData {
+  revenue: {
+    total_revenue: number;
+    average_revenue_per_appointment: number;
+    growth_percentage: number;
+    revenue_by_service: {
+      service_name: string;
+      total_revenue: number;
+    }[];
+  };
+  servicePopularity: {
+    service_name: string;
+    category: string;
+    booking_count: number;
+    total_revenue: number;
+  }[];
+  appointments: {
+    total: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    pending: number;
+  };
+  businessInsights: {
+    peak_hours: {
+      time_slot: string;
+      booking_count: number;
+    }[];
+    top_staff: {
+      name: string;
+      position: string;
+      appointments_completed: number;
+      total_revenue: number;
+    }[];
+    retention_rate: number;
+    customer_satisfaction_score: number;
+    total_customers: number;
+  };
+}
 
 // =====================================================
 // REVENUE ENDPOINTS
 // =====================================================
 export const getRevenueSummary = (start?: string, end?: string) =>
-  apiRequest("/api/v1/analytics/revenue/summary", {
+  apiRequest<RevenueSummary>("/api/v1/analytics/revenue/summary", {
     start_date: start || "",
     end_date: end || "",
   });
@@ -79,7 +159,7 @@ export const getRevenueByDateRange = (start: string, end: string) =>
   });
 
 export const getRevenueByService = (start?: string, end?: string, limit?: number) =>
-  apiRequest("/api/v1/analytics/revenue/by-service", {
+  apiRequest<ServiceRevenue[]>("/api/v1/analytics/revenue/by-service", {
     start_date: start || "",
     end_date: end || "",
     limit: limit?.toString() || "",
@@ -96,7 +176,7 @@ export const getRevenueByStaff = (start?: string, end?: string, limit?: number) 
 // SERVICE ANALYTICS
 // =====================================================
 export const getServicePopularity = (start?: string, end?: string, limit?: number) =>
-  apiRequest("/api/v1/analytics/services/popularity", {
+  apiRequest<ServicePopularity[]>("/api/v1/analytics/services/popularity", {
     start_date: start || "",
     end_date: end || "",
     limit: limit?.toString() || "",
@@ -112,7 +192,7 @@ export const getServicePerformance = (start?: string, end?: string) =>
 // STAFF ANALYTICS
 // =====================================================
 export const getStaffPerformanceList = (start?: string, end?: string, limit?: number) =>
-  apiRequest("/api/v1/analytics/staff/performance", {
+  apiRequest<StaffPerformance[]>("/api/v1/analytics/staff/performance", {
     start_date: start || "",
     end_date: end || "",
     limit: limit?.toString() || "",
@@ -128,7 +208,7 @@ export const getStaffStats = (id: number, start?: string, end?: string) =>
 // APPOINTMENTS ANALYTICS
 // =====================================================
 export const getAppointmentsSummary = (start?: string, end?: string) =>
-  apiRequest("/api/v1/analytics/appointments/summary", {
+  apiRequest<AppointmentSummary>("/api/v1/analytics/appointments/summary", {
     start_date: start || "",
     end_date: end || "",
   });
@@ -140,7 +220,7 @@ export const getBookingTrends = (start?: string, end?: string) =>
   });
 
 export const getPeakHours = (start?: string, end?: string) =>
-  apiRequest("/api/v1/analytics/appointments/peak-hours", {
+  apiRequest<PeakHour[]>("/api/v1/analytics/appointments/peak-hours", {
     start_date: start || "",
     end_date: end || "",
   });
@@ -156,7 +236,7 @@ export const getTopCustomers = (start?: string, end?: string, limit?: number) =>
   });
 
 export const getCustomerRetention = () =>
-  apiRequest("/api/v1/analytics/customers/retention");
+  apiRequest<CustomerRetention>("/api/v1/analytics/customers/retention");
 
 // =====================================================
 // DASHBOARD ROOT ENDPOINT
