@@ -1,10 +1,8 @@
 /**
  * RevenueChartMini Component
- * 
- * A compact revenue chart for the overview dashboard.
- * Shows revenue trend over the last 7 days with total and percentage change.
- * 
- * @component
+ *
+ * Compact weekly revenue chart with total, percentage change,
+ * and rolling date range (last 7 days).
  */
 
 'use client'
@@ -19,21 +17,34 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
+// =====================================================
+// TYPES
+// =====================================================
+
 interface DailyRevenue {
-  day: string
+  day: string          // Mon, Tue, Wed...
   revenue: number
+  date: string         // YYYY-MM-DD (required)
 }
 
 interface RevenueChartMiniProps {
-  /** Revenue data for last 7 days */
   data: DailyRevenue[]
-  /** Total revenue for the period */
   totalRevenue: number
-  /** Percentage change compared to previous period */
   changePercent: number
-  /** Loading state */
   loading?: boolean
 }
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-GB')
+}
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function RevenueChartMini({
   data,
@@ -53,21 +64,50 @@ export default function RevenueChartMini({
     )
   }
 
+  // ✅ Ensure valid dates + correct order
+  const sortedData = data
+    .filter((d) => d.date)
+    .sort(
+      (a, b) =>
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+    )
+
+  const startDate =
+    sortedData.length > 0 ? formatDate(sortedData[0].date) : null
+
+  const endDate =
+    sortedData.length > 0
+      ? formatDate(sortedData[sortedData.length - 1].date)
+      : null
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-start justify-between mb-2">
         <h3 className="text-xl font-bold text-gray-800 flex items-center">
           <TrendingUp size={24} className="mr-2 text-red-600" />
           Weekly Revenue
         </h3>
-        <span
-          className={`text-xs font-semibold px-2 py-1 rounded ${
-            isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {isPositive ? '↑' : '↓'} {Math.abs(changePercent).toFixed(1)}%
-        </span>
+
+        {/* % + Date range */}
+        <div className="flex flex-col items-end">
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded ${
+              isPositive
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {isPositive ? '↑' : '↓'} {Math.abs(changePercent).toFixed(1)}%
+          </span>
+
+          {startDate && endDate && (
+            <span className="mt-1 text-[11px] text-gray-500">
+              {startDate} – {endDate}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Total Revenue */}
@@ -75,9 +115,9 @@ export default function RevenueChartMini({
         LKR {totalRevenue.toLocaleString()}
       </p>
 
-      {/* Recharts Bar Chart */}
+      {/* Chart */}
       <ResponsiveContainer width="100%" height={120}>
-        <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+        <BarChart data={sortedData}>
           <XAxis
             dataKey="day"
             axisLine={false}
@@ -86,7 +126,10 @@ export default function RevenueChartMini({
           />
           <YAxis hide />
           <Tooltip
-            formatter={(value: number) => [`LKR ${value.toLocaleString()}`, 'Revenue']}
+            formatter={(value: number) => [
+              `LKR ${value.toLocaleString()}`,
+              'Revenue',
+            ]}
             contentStyle={{
               backgroundColor: '#ffffff',
               border: '1px solid #e5e7eb',

@@ -1,9 +1,22 @@
 import { apiClientFetch } from "@/lib/apiClient";
 
-const BASE =
+/* ============================================================
+   BASE URL NORMALIZATION
+   ============================================================ */
+
+const RAW_BASE =
   process.env.NEXT_PUBLIC_STAFF_API_BASE ||
   "https://staff-service.azurewebsites.net/api/v1";
 
+const BASE = RAW_BASE.replace(/\/+$/, ""); // remove trailing slash
+
+/* ============================================================
+   API FETCH WRAPPER
+   - Ensures path always starts with "/"
+   - Delegates request to apiClientFetch
+   ============================================================ */
+
 export function staffApiFetch(path: string, options: RequestInit = {}) {
-  return apiClientFetch(BASE, path, options);
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return apiClientFetch(BASE, cleanPath, options);
 }

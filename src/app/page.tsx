@@ -16,17 +16,7 @@ export default function HomePage() {
       <Navbar />
       <Hero />
       <Brands />
-      <Products />
-      {/* <ServicesSection /> */}
       <Testimonials />
-      <ContactHero />
-
-      <section className="py-16 px-6 md:px-16 grid md:grid-cols-2 gap-12">
-        <ContactInfo />
-        <ContactForm />
-      </section>
-
-      <ContactMap />
       <Footer />
     </main>
   );
