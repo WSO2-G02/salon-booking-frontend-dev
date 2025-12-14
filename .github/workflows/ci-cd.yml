@@ -193,19 +193,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Rebuild image locally for Trivy scan
-        id: image
-        run: |
-          IMAGE_REF=${{ needs.build.outputs.full_image }}
-          docker build \
-            -f ./DockerFile \
-            -t $IMAGE_REF \
-            .
-          echo "image_ref=$IMAGE_REF" >> $GITHUB_OUTPUT
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-frontend
 
+      - name: Load Docker image
+        id: load
+        run: |
+          gunzip -c image-frontend.tar.gz | docker load
+          # Extract image name from image list
+          IMAGE_ID=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "${{ env.FRONTEND_SERVICE_NAME }}" | head -n1)
+          echo "image_ref=$IMAGE_ID" >> $GITHUB_OUTPUT
       - name: Run Trivy vulnerability scanner (SARIF)
         uses: aquasecurity/trivy-action@0.28.0
         with:
