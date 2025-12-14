@@ -331,7 +331,7 @@ interface WeeklyRevenue {
  * Get last 7 days revenue (frontend-safe)
  */
 export async function getWeeklyRevenue(): Promise<{
-  data: { day: string; revenue: number }[]
+  data: { day: string; revenue: number; date: string }[]
   totalRevenue: number
   changePercent: number
 }> {
@@ -360,6 +360,7 @@ export async function getWeeklyRevenue(): Promise<{
   const chartData = normalized.map(d => ({
     day: d.day,
     revenue: d.revenue,
+    date: d.date,
   }))
 
   // 5️⃣ Totals

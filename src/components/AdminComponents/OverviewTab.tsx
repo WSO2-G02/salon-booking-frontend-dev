@@ -268,10 +268,38 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard Icon={Calendar} value={stats.todayAppointments} label="Today's Appointments" loading={loading} />
-        <StatCard Icon={DollarSign} value={`LKR ${(stats.totalRevenue / 1000).toFixed(0)}K`} label="Total Revenue" loading={loading} />
-        <StatCard Icon={Users} value={stats.totalCustomers} label="Customers" loading={loading} />
-        <StatCard Icon={Scissors} value={stats.activeServices} label="Services" loading={loading} />
+        <StatCard
+          Icon={Calendar}
+          value={stats.todayAppointments}
+          label="Today's Appointments"
+          loading={loading}
+          bgColor="bg-blue-100"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          Icon={DollarSign}
+          value={`LKR ${(stats.totalRevenue / 1000).toFixed(0)}K`}
+          label="Total Revenue"
+          loading={loading}
+          bgColor="bg-green-100"
+          iconColor="text-green-600"
+        />
+        <StatCard
+          Icon={Users}
+          value={stats.totalCustomers}
+          label="Customers"
+          loading={loading}
+          bgColor="bg-purple-100"
+          iconColor="text-purple-600"
+        />
+        <StatCard
+          Icon={Scissors}
+          value={stats.activeServices}
+          label="Services"
+          loading={loading}
+          bgColor="bg-orange-100"
+          iconColor="text-orange-600"
+        />
       </div>
 
       {/* CONTENT */}
@@ -288,7 +316,7 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
             changePercent={stats.revenueTrend}
             loading={loading}
           />
-          <QuickActionsCard onTabChange={onTabChange} />
+          <QuickActionsCard onTabChange={onTabChange || (() => {})} />
           <TopServicesCard services={topServices} loading={loading} />
         </div>
       </div>
