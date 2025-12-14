@@ -1,8 +1,11 @@
 # ----------------------------
 # Builder Stage
 # ----------------------------
-FROM node:18-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
+
+# Update npm to latest to fix known vulnerabilities (glob, cross-spawn, brace-expansion)
+RUN npm install -g npm@latest
 
 # Install build dependencies
 # (Slim uses Debian – must install libc dependencies for Next.js)
@@ -39,14 +42,15 @@ RUN npm run build
 # ----------------------------
 # Runner Stage (Production)
 # ----------------------------
-FROM node:18-slim AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Security: Upgrade OS packages to fix known vulnerabilities
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# Security: Upgrade npm and OS packages to fix known vulnerabilities
+RUN npm install -g npm@latest && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install only prod dependencies
 COPY package.json package-lock.json* ./
