@@ -3,7 +3,7 @@
  * Handles all API calls to the Service Management Service (Port 8002).
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_SERVICES_API_BASE?.replace(/\/+$/, "") || "";
+const API_BASE = process.env.NEXT_PUBLIC_SERVICE_API_BASE?.replace(/\/+$/, "") || "";
 
 // =====================================================
 // TYPE DEFINITIONS
