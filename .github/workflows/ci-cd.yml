@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: eu-north-1
+  AWS_REGION: us-east-1
   AWS_ACCOUNT_ID: '024955634588'     
   GITOPS_REPO: 'WSO2-G02/salon-gitops'
   FRONTEND_SERVICE_NAME: 'frontend'
