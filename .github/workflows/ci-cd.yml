@@ -128,13 +128,15 @@ jobs:
       - name: Save image artifact
         run: |
           docker save ${{ steps.meta.outputs.full_image }} | gzip > image-frontend.tar.gz
+          ls -la image-frontend.tar.gz
+          
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: image-frontend
           path: image-frontend.tar.gz
           retention-days: 1
+          if-no-files-found: error
 
 
   # ---------------------------
