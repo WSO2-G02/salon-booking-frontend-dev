@@ -3,7 +3,7 @@ import { apiClientFetch } from "@/lib/apiClient";
 // Normalize BASE so it NEVER ends with a trailing slash
 const RAW_BASE =
   process.env.NEXT_PUBLIC_ANALYTICS_API_BASE ||
-  "https://analytics-report-service-salon.azurewebsites.net/api/v1";
+  "https://aurora-glam.com/api/reports";
 
 const BASE = RAW_BASE.replace(/\/+$/, ""); // remove trailing slashes
 

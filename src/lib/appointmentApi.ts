@@ -10,7 +10,7 @@ import { apiClientFetch } from "@/lib/apiClient";
 
 const RAW_BASE =
   process.env.NEXT_PUBLIC_APPOINTMENT_API_BASE ||
-  "https://appointment-service-salon.azurewebsites.net/api/v1";
+  "https://aurora-glam.com/api/appointments";
 
 const BASE = RAW_BASE.replace(/\/+$/, ""); // remove trailing slash
 

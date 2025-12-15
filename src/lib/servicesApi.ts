@@ -9,8 +9,8 @@ import { apiClientFetch } from "@/lib/apiClient";
    ============================================================ */
 
 const RAW_BASE =
-  process.env.NEXT_PUBLIC_SERVICES_API_BASE ||
-  "https://services-management.azurewebsites.net/api/v1";
+  process.env.NEXT_PUBLIC_SERVICE_API_BASE ||
+  "https://aurora-glam.com/api/services";
 
 const BASE = RAW_BASE.replace(/\/+$/, ""); // remove trailing slash
 
