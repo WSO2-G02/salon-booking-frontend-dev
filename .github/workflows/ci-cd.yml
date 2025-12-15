@@ -355,19 +355,25 @@ jobs:
         run: |
           cd gitops
 
-          DEPLOY_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
-
-          if [ -f "$DEPLOY_FILE" ]; then
-            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$DEPLOY_FILE"
-
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add "$DEPLOY_FILE"
-            git commit -m "chore: update frontend image to ${IMAGE_TAG} for commit ${GITHUB_SHA}" || true
-            git push
-          else
-            echo "No deployment file found at $DEPLOY_FILE"
+          # Update STAGING deployment
+          STAGING_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
+          if [ -f "$STAGING_FILE" ]; then
+            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$STAGING_FILE"
+            echo "✅ Updated staging deployment"
           fi
+
+          # Update PRODUCTION deployment
+          PROD_FILE="production/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
+          if [ -f "$PROD_FILE" ]; then
+            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$PROD_FILE"
+            echo "✅ Updated production deployment"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: update frontend image to ${IMAGE_TAG} for commit ${GITHUB_SHA}" || true
+          git push
 
 
   # ---------------------------
