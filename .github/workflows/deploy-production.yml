@@ -1,4 +1,7 @@
-name: Deploy to Production
+name: Deploy Frontend to Production
+
+# NOTE: For deploying multiple services at once, use the unified workflow:
+# https://github.com/WSO2-G02/salon-gitops/actions/workflows/deploy-production.yml
 
 on:
   workflow_dispatch:
@@ -14,9 +17,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: '024955634588'
+  ECR_REGISTRY: '024955634588.dkr.ecr.us-east-1.amazonaws.com'
   GITOPS_REPO: 'WSO2-G02/salon-gitops'
-  FRONTEND_SERVICE_NAME: 'frontend'
+  SERVICE_NAME: 'frontend'
 
 jobs:
   validate:
@@ -42,13 +45,12 @@ jobs:
         id: get_tag
         run: |
           if [ -n "${{ github.event.inputs.image_tag }}" ]; then
-            # Use provided image tag
             IMAGE_TAG="${{ github.event.inputs.image_tag }}"
             echo "Using provided image tag: $IMAGE_TAG"
           else
             # Get current staging image tag
-            STAGING_FILE="gitops/staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
-            IMAGE_TAG=$(grep -oP 'image:.*:\K[^"]+' "$STAGING_FILE" | head -1)
+            STAGING_FILE="gitops/staging/${{ env.SERVICE_NAME }}/deployment.yaml"
+            IMAGE_TAG=$(grep "image:" "$STAGING_FILE" | head -1 | awk -F: '{print $NF}' | tr -d ' ')
             echo "Promoting staging image tag: $IMAGE_TAG"
           fi
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -58,22 +60,19 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          # Install AWS CLI
           pip install awscli --quiet
           
           IMAGE_TAG="${{ steps.get_tag.outputs.image_tag }}"
-          ECR_REGISTRY="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
           
-          # Check if image exists
           aws ecr describe-images \
-            --repository-name ${{ env.FRONTEND_SERVICE_NAME }} \
+            --repository-name ${{ env.SERVICE_NAME }} \
             --image-ids imageTag=$IMAGE_TAG \
             --region ${{ env.AWS_REGION }} || {
-              echo "[ERROR] Image tag $IMAGE_TAG not found in ECR!"
+              echo "::error::Image tag $IMAGE_TAG not found in ECR!"
               exit 1
             }
           
-          echo "[OK] Image verified in ECR: $ECR_REGISTRY/${{ env.FRONTEND_SERVICE_NAME }}:$IMAGE_TAG"
+          echo "Image verified: ${{ env.ECR_REGISTRY }}/${{ env.SERVICE_NAME }}:$IMAGE_TAG"
 
   deploy:
     name: Deploy to Production
@@ -90,31 +89,31 @@ jobs:
 
       - name: Update production deployment
         env:
-          ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           IMAGE_TAG: ${{ needs.validate.outputs.image_tag }}
         run: |
           cd gitops
           
-          PROD_FILE="production/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
+          PROD_FILE="production/${{ env.SERVICE_NAME }}/deployment.yaml"
           
           if [ -f "$PROD_FILE" ]; then
-            # Get current production tag for rollback info
-            CURRENT_TAG=$(grep -oP 'image:.*:\K[^"]+' "$PROD_FILE" | head -1)
+            CURRENT_TAG=$(grep "image:" "$PROD_FILE" | head -1 | awk -F: '{print $NF}' | tr -d ' ')
             echo "Current production tag: $CURRENT_TAG"
             echo "New production tag: $IMAGE_TAG"
             
-            # Update the image tag
-            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$PROD_FILE"
+            sed -i "s|image: ${{ env.ECR_REGISTRY }}/${{ env.SERVICE_NAME }}:.*|image: ${{ env.ECR_REGISTRY }}/${{ env.SERVICE_NAME }}:${IMAGE_TAG}|g" "$PROD_FILE"
             
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add "$PROD_FILE"
-            git commit -m "[PRODUCTION] Deploy frontend ${IMAGE_TAG} - Deployed by ${{ github.actor }} - Previous: $CURRENT_TAG"
+            git commit -m "[PROD] Deploy ${{ env.SERVICE_NAME }}:${IMAGE_TAG}
+
+Deployed by: ${{ github.actor }}
+Previous: $CURRENT_TAG"
             git push
             
-            echo "[OK] Production deployment manifest updated!"
+            echo "Production deployment manifest updated!"
           else
-            echo "[ERROR] Production deployment file not found: $PROD_FILE"
+            echo "::error::Production deployment file not found: $PROD_FILE"
             exit 1
           fi
 
