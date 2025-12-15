@@ -279,6 +279,7 @@ jobs:
     needs: [ detect-changes, build, trivy-scan ]
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'pull_request' &&
        github.event.action == 'closed' &&
        github.event.pull_request.merged == true &&
@@ -334,6 +335,7 @@ jobs:
     needs: [ push-to-ecr ]
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch') ||
       (github.event_name == 'pull_request' &&
        github.event.action == 'closed' &&
        github.event.pull_request.merged == true &&
