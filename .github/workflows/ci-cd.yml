@@ -85,9 +85,9 @@ jobs:
     if: needs.detect-changes.outputs.has_changes == 'true'
     outputs:
       image_tag: ${{ steps.meta.outputs.image_tag }}
-      full_image: ${{ steps.meta.outputs.full_image }}
+      staging_image: ${{ steps.meta.outputs.staging_image }}
+      production_image: ${{ steps.meta.outputs.production_image }}
       scan_image: ${{ steps.meta.outputs.scan_image }}
-      latest_image: ${{ steps.meta.outputs.latest_image }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -112,32 +112,55 @@ jobs:
           TIMESTAMP=${{ needs.detect-changes.outputs.timestamp }}
           ECR_REGISTRY=${{ needs.detect-changes.outputs.ecr_registry }}
           IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
-          SCAN_TAG=${SHORT_SHA}-${TIMESTAMP}-scan
-          FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
+          SCAN_TAG=scan-${SHORT_SHA}-${TIMESTAMP}
+          
+          # Separate tags for staging and production
+          STAGING_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:staging-${IMAGE_TAG}
+          PRODUCTION_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
           SCAN_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${SCAN_TAG}
-          LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
+          
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "scan_tag=${SCAN_TAG}" >> $GITHUB_OUTPUT
-          echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
+          echo "staging_image=${STAGING_IMAGE}" >> $GITHUB_OUTPUT
+          echo "production_image=${PRODUCTION_IMAGE}" >> $GITHUB_OUTPUT
           echo "scan_image=${SCAN_IMAGE}" >> $GITHUB_OUTPUT
-          echo "latest_image=${LATEST_IMAGE}" >> $GITHUB_OUTPUT
 
-      - name: Build and Push Temp Image (for scanning)
+      # Build STAGING image (for testing/QA)
+      - name: Build and Push STAGING Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./DockerFile
           push: true
-          tags: ${{ steps.meta.outputs.scan_image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.staging_image }}
+          cache-from: type=gha,scope=staging
+          cache-to: type=gha,mode=max,scope=staging
           build-args: |
-            NEXT_PUBLIC_USER_API_BASE=${{ secrets.NEXT_PUBLIC_USER_API_BASE }}
-            NEXT_PUBLIC_SERVICE_API_BASE=${{ secrets.NEXT_PUBLIC_SERVICE_API_BASE }}
-            NEXT_PUBLIC_STAFF_API_BASE=${{ secrets.NEXT_PUBLIC_STAFF_API_BASE }}
-            NEXT_PUBLIC_APPOINTMENT_API_BASE=${{ secrets.NEXT_PUBLIC_APPOINTMENT_API_BASE }}
-            NEXT_PUBLIC_NOTIFICATION_API_BASE=${{ secrets.NEXT_PUBLIC_NOTIFICATION_API_BASE }}
-            NEXT_PUBLIC_ANALYTICS_API_BASE=${{ secrets.NEXT_PUBLIC_ANALYTICS_API_BASE }}
+            NEXT_PUBLIC_USER_API_BASE=${{ secrets.STAGING_USER_API_BASE }}
+            NEXT_PUBLIC_SERVICE_API_BASE=${{ secrets.STAGING_SERVICE_API_BASE }}
+            NEXT_PUBLIC_STAFF_API_BASE=${{ secrets.STAGING_STAFF_API_BASE }}
+            NEXT_PUBLIC_APPOINTMENT_API_BASE=${{ secrets.STAGING_APPOINTMENT_API_BASE }}
+            NEXT_PUBLIC_NOTIFICATION_API_BASE=${{ secrets.STAGING_NOTIFICATION_API_BASE }}
+            NEXT_PUBLIC_ANALYTICS_API_BASE=${{ secrets.STAGING_ANALYTICS_API_BASE }}
+
+      # Build PRODUCTION image (for live site)
+      - name: Build and Push PRODUCTION Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./DockerFile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.production_image }}
+            ${{ steps.meta.outputs.scan_image }}
+          cache-from: type=gha,scope=production
+          cache-to: type=gha,mode=max,scope=production
+          build-args: |
+            NEXT_PUBLIC_USER_API_BASE=${{ secrets.PROD_USER_API_BASE }}
+            NEXT_PUBLIC_SERVICE_API_BASE=${{ secrets.PROD_SERVICE_API_BASE }}
+            NEXT_PUBLIC_STAFF_API_BASE=${{ secrets.PROD_STAFF_API_BASE }}
+            NEXT_PUBLIC_APPOINTMENT_API_BASE=${{ secrets.PROD_APPOINTMENT_API_BASE }}
+            NEXT_PUBLIC_NOTIFICATION_API_BASE=${{ secrets.PROD_NOTIFICATION_API_BASE }}
+            NEXT_PUBLIC_ANALYTICS_API_BASE=${{ secrets.PROD_ANALYTICS_API_BASE }}
 
 
   # ---------------------------
@@ -285,8 +308,9 @@ jobs:
        github.event.pull_request.merged == true &&
        github.base_ref == 'main')
     outputs:
-      image_tag: ${{ steps.tag.outputs.image_tag }}
-      full_image: ${{ steps.tag.outputs.full_image }}
+      image_tag: ${{ needs.build.outputs.image_tag }}
+      staging_image: ${{ needs.build.outputs.staging_image }}
+      production_image: ${{ needs.build.outputs.production_image }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -298,33 +322,21 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Pull scan image and re-tag for release
-        id: tag
+      - name: Tag and push latest
         env:
           ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-          SCAN_IMAGE: ${{ needs.build.outputs.scan_image }}
+          PRODUCTION_IMAGE: ${{ needs.build.outputs.production_image }}
         run: |
-          # Pull the -scan image that was pushed during build
-          docker pull "$SCAN_IMAGE"
-
-          SHORT_SHA=${GITHUB_SHA::8}
-          TIMESTAMP=${{ needs.detect-changes.outputs.timestamp }}
-          IMAGE_TAG=${SHORT_SHA}-${TIMESTAMP}
-
-          FULL_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}
+          # Pull production image and tag as latest
+          docker pull "$PRODUCTION_IMAGE"
+          
           LATEST_IMAGE=${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:latest
-
-          # Re-tag from -scan to release tags
-          docker tag "$SCAN_IMAGE" "$FULL_IMAGE"
-          docker tag "$SCAN_IMAGE" "$LATEST_IMAGE"
-
-          # Push release tags
-          docker push "$FULL_IMAGE"
+          docker tag "$PRODUCTION_IMAGE" "$LATEST_IMAGE"
           docker push "$LATEST_IMAGE"
-
-          echo "full_image=$FULL_IMAGE" >> $GITHUB_OUTPUT
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "[OK] Published: $FULL_IMAGE"
+          
+          echo "[OK] Published staging and production images"
+          echo "  Staging: ${{ needs.build.outputs.staging_image }}"
+          echo "  Production: ${{ needs.build.outputs.production_image }}"
 
   # ---------------------------
   # Update GitOps repository (only on main push)
@@ -348,20 +360,20 @@ jobs:
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
 
-      - name: Update deployment manifest image tag
+      - name: Update staging deployment with STAGING image
         env:
-          ECR_REGISTRY: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          STAGING_IMAGE: ${{ needs.push-to-ecr.outputs.staging_image }}
           IMAGE_TAG: ${{ needs.push-to-ecr.outputs.image_tag }}
         run: |
           cd gitops
 
-          # Update STAGING deployment ONLY (industry best practice)
-          # Production is updated via manual "Deploy to Production" workflow
+          # Update STAGING deployment with STAGING-specific image
+          # This image has staging API URLs baked in
           STAGING_FILE="staging/${{ env.FRONTEND_SERVICE_NAME }}/deployment.yaml"
           if [ -f "$STAGING_FILE" ]; then
-            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${ECR_REGISTRY}/${{ env.FRONTEND_SERVICE_NAME }}:${IMAGE_TAG}|g" "$STAGING_FILE"
-            echo "[OK] Updated staging deployment: ${IMAGE_TAG}"
-            echo "[INFO] To deploy to production, use the Deploy to Production workflow"
+            sed -i "s|image: .*${{ env.FRONTEND_SERVICE_NAME }}:.*|image: ${STAGING_IMAGE}|g" "$STAGING_FILE"
+            echo "[OK] Updated staging deployment with staging image"
+            echo "  Image: ${STAGING_IMAGE}"
           else
             echo "[ERROR] Staging deployment file not found: $STAGING_FILE"
             exit 1
@@ -370,7 +382,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "$STAGING_FILE"
-          git commit -m "chore(staging): update frontend to ${IMAGE_TAG} [${GITHUB_SHA::8}]" || true
+          git commit -m "chore(staging): update frontend to staging-${IMAGE_TAG}\n\nStaging image with staging API URLs baked in.\nProduction image available: frontend:${IMAGE_TAG}" || true
           git push
 
   # ---------------------------
@@ -387,8 +399,15 @@ jobs:
           echo "## Frontend CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Info" >> $GITHUB_STEP_SUMMARY
-          echo "- Scan Image: ${{ needs.build.outputs.scan_image }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Release Tag: ${{ needs.push-to-ecr.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Staging Image:** ${{ needs.build.outputs.staging_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Image:** ${{ needs.build.outputs.production_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag:** ${{ needs.build.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment URLs" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | Frontend | APIs |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|----------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Staging | staging.aurora-glam.com | staging.aurora-glam.com/api/* |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production | aurora-glam.com | aurora-glam.com/api/* |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Pipeline Jobs" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
