@@ -95,7 +95,7 @@ export default function AppointmentsTable({
       {/* TABLE CONTAINER                                  */}
       {/* ================================================= */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 ">
           {/* Table Header */}
           <thead className="bg-gray-50">
             <tr>
@@ -127,7 +127,7 @@ export default function AppointmentsTable({
           </thead>
 
           {/* Table Body */}
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 ">
             {appointmentsList.map((appointment) => (
               <tr
                 key={appointment.id}
@@ -142,10 +142,10 @@ export default function AppointmentsTable({
                       <Calendar size={20} className="text-red-600" />
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-black">
                         {appointment.id}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-black">
                         ID: {appointment.id}
                       </p>
                     </div>
@@ -153,33 +153,33 @@ export default function AppointmentsTable({
                 </td>
                 {/* Staff */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-900">
-                    <Briefcase size={14} className="mr-2 text-gray-400" />
+                  <div className="flex items-center text-sm text-black">
+                    <Briefcase size={14} className="mr-2 " />
                     {appointment.staff_id || "Unassigned"}
                   </div>
                 </td>
                 {/* Service ID */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  <div className="flex items-center text-sm text-gray-900">
-                    <Briefcase size={14} className="mr-2 text-gray-400" />
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                  <div className="flex items-center text-sm text-black">
+                    <Briefcase size={14} className="mr-2 " />
                     {appointment.service_id}
                   </div>
                 </td>
                 {/* Price */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-700">
-                    <DollarSign size={14} className="mr-2 text-gray-400" />
+                  <div className="flex items-center text-sm text-black">
+                    <DollarSign size={14} className="mr-2 " />
                     {appointment.price !== null ? (
                       <span>{appointment.service_price} LKR</span>
                     ) : (
-                      <span className="text-gray-400">N/A</span>
+                      <span >N/A</span>
                     )}
                   </div>
                 </td>
                 {/* Appointment Date */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  <div className="flex items-center text-sm text-gray-900">
-                    <Clock size={14} className="mr-2 text-gray-400" />
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                  <div className="flex items-center text-sm ">
+                    <Clock size={14} className="mr-2 " />
                     {formatDate(appointment.appointment_datetime)}
                   </div>
                 </td>
@@ -210,13 +210,13 @@ export default function AppointmentsTable({
                   </span>
                 </td>
                 {/* Customer Notes */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
                   <div className="flex items-center text-sm text-gray-900">
                     <Clock size={14} className="mr-2 text-gray-400" />
                     {appointment.customer_notes ? (
-                      <span>{appointment.customer_notes}</span>
+                      <span className="text-black">{appointment.customer_notes}</span>
                     ) : (
-                      <span className="text-gray-400">N/A</span>
+                      <span className="text-black">N/A</span>
                     )}
                   </div>
                 </td>

@@ -40,9 +40,8 @@ export default function StepSelectService({ onSelect, selected }: Props) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // setLoading(true);
+        setLoading(true);
         const data = await getServices(true);
-        console.log(data)
         setServicesLits(data);
       } catch (error) {
         console.error("Error fetching services:", error);
@@ -50,8 +49,10 @@ export default function StepSelectService({ onSelect, selected }: Props) {
         setLoading(false);
       }
     };
+
     fetchServices();
-  }, [servicesList]);
+ 
+  }, []);
 
   return (
     <div className="text-center">
@@ -65,8 +66,7 @@ export default function StepSelectService({ onSelect, selected }: Props) {
       <div className="flex flex-wrap justify-center gap-8">
         {loading && (
           <div className="flex justify-center items-center gap-2 text-gray-500 mt-4">
-            <Loader2 className="w-5 h-5 animate-spin" /> Checking
-            availability...
+            <Loader2 className="w-5 h-5 animate-spin" /> Loading services...
           </div>
         )}
         {servicesList.map((s) => (

@@ -209,7 +209,7 @@ export default function ServicesManagementTab() {
           <div className="flex items-center gap-3">
             <Scissors size={28} className="text-red-600" />
             <div>
-              <h2 className="text-2xl font-bold">Services Management</h2>
+              <h2 className="text-2xl text-gray-800 font-bold">Services Management</h2>
               <p className="text-sm text-gray-600">
                 Manage salon services, pricing, and categories
               </p>

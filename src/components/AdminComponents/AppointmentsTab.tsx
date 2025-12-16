@@ -239,7 +239,7 @@ export default function AppointmentsTab() {
             </div>
           </div>
 
-          {/* Add new staff button */}
+          {/* Add new appointment button */}
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"

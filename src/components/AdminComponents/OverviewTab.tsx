@@ -253,13 +253,13 @@ export default function OverviewTab({ onTabChange }: OverviewTabProps) {
         <div className="flex items-center gap-3">
           <LayoutDashboard size={28} className="text-red-600" />
           <div>
-            <h2 className="text-2xl font-bold">Welcome back, Admin!</h2>
+            <h2 className="text-2xl text-gray-800 font-bold">Welcome back, Admin!</h2>
             <p className="text-sm text-gray-600">
               Here's what's happening today
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-2 rounded">
+        <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-2 text-gray-500 border border-gray-50 rounded-md">
           <Wifi size={16} />
           {serviceHealth.filter((s) => s.status === 'online').length}/
           {serviceHealth.length} services online

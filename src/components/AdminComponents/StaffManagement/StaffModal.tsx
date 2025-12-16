@@ -200,7 +200,7 @@ export default function StaffModal({
       />
       
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 text-gray-500">
         <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
