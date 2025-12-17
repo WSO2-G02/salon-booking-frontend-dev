@@ -14,7 +14,7 @@ import { getUserProfile } from "@/services/userService";
 
 export default function MyAppointments() {
   const [appointmentsList, setAppointmentsList] = useState<any[]>([]);
-  const [userID, setUserID] = useState<number | null>(null);
+  const [userID, setUserID] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   // -----------------------------
@@ -91,14 +91,12 @@ export default function MyAppointments() {
   // TABLE RENDER
   // -----------------------------
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden p-8">
+    <div className="bg-white text-black rounded-lg shadow-md overflow-hidden p-8">
       {/* Gold Line */}
       <div className="flex justify-center mb-4">
         <div className="h-1 w-20 bg-yellow-500 rounded-full"></div>
       </div>
-      <h2 className="text-2xl font-bold mb-6 text-gray-700">
-        My Appointments
-      </h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-700">My Appointments</h2>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -153,9 +151,24 @@ export default function MyAppointments() {
                 </td>
 
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                    {appointment.status}
-                  </span>
+                    <span
+                    className={`w-24 text-center px-3 py-1 rounded-full text-xs font-medium ${
+                      appointment.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : appointment.status === "confirmed"
+                      ? "bg-blue-100 text-blue-800"
+                      : appointment.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
+                      : appointment.status === "no show"
+                      ? "bg-gray-100 text-gray-800"
+                      : appointment.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-gray-100 text-gray-800"
+                    }`}
+                    >
+                    {appointment.status.charAt(0).toUpperCase() +
+                      appointment.status.slice(1)}
+                    </span>
                 </td>
 
                 <td className="px-6 py-4 text-right">
