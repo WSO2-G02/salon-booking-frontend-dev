@@ -11,9 +11,9 @@
  * @component
  */
 
-'use client'
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Edit,
   Trash2,
@@ -22,28 +22,26 @@ import {
   Briefcase,
   Clock,
   DollarSign,
-} from "lucide-react"
+} from "lucide-react";
 
-import AppointmentModal from "./AppointmentModal"
-import AppointmentViewModal from "./AppointmentViewModal"
+import AppointmentModal from "./AppointmentModal";
+import AppointmentViewModal from "./AppointmentViewModal";
 
-import {
-  deleteAppointment,
-} from "@/services/appointmentService"
+import { deleteAppointment } from "@/services/appointmentService";
 
-import { showToast } from "@/components/Toast"
+import { showToast } from "@/components/Toast";
 
 // =====================================================
 // PROPS
 // =====================================================
 
 interface AppointmentTableProps {
-  appointmentsList: any[]
-  page: number
-  limit: number
-  onPageChange: (page: number) => void
-  onEdit: () => void
-  loading: boolean
+  appointmentsList: any[];
+  page: number;
+  limit: number;
+  onPageChange: (page: number) => void;
+  onEdit: () => void;
+  loading: boolean;
 }
 
 // =====================================================
@@ -58,43 +56,42 @@ export default function AppointmentsTable({
   onEdit,
   loading,
 }: AppointmentTableProps) {
-
   // =====================================================
   // STATE
   // =====================================================
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
 
   // =====================================================
   // HELPERS
   // =====================================================
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A"
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const handleDeleteAppointment = async (appointmentId: number) => {
-    if (!confirm("Are you sure you want to delete this appointment?")) return
+    if (!confirm("Are you sure you want to delete this appointment?")) return;
 
     try {
-      await deleteAppointment(appointmentId)
-      showToast("Appointment deleted", "success")
-      onEdit() // refresh list
+      await deleteAppointment(appointmentId);
+      showToast("Appointment deleted", "success");
+      onEdit(); // refresh list
     } catch (err) {
-      showToast("Failed to delete appointment", "error")
-      console.error(err)
+      showToast("Failed to delete appointment", "error");
+      console.error(err);
     }
-  }
+  };
 
-  const hasNextPage = appointmentsList.length === limit
-  const hasPrevPage = page > 1
+  const hasNextPage = appointmentsList.length === limit;
+  const hasPrevPage = page > 1;
 
   // =====================================================
   // EMPTY STATE
@@ -111,7 +108,7 @@ export default function AppointmentsTable({
           No appointments match your current filters.
         </p>
       </div>
-    )
+    );
   }
 
   // =====================================================
@@ -124,18 +121,33 @@ export default function AppointmentsTable({
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-
             {/* HEADER */}
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Staff</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Service</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Notes</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Staff
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Service
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                  Notes
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600">
+                  Actions
+                </th>
               </tr>
             </thead>
 
@@ -143,7 +155,6 @@ export default function AppointmentsTable({
             <tbody className="divide-y divide-gray-200">
               {appointmentsList.map((appointment) => (
                 <tr key={appointment.id} className="hover:bg-gray-50">
-
                   {/* ID */}
                   <td className="px-6 py-4">
                     <div className="flex items-center">
@@ -158,9 +169,7 @@ export default function AppointmentsTable({
                   </td>
 
                   {/* SERVICE */}
-                  <td className="px-6 py-4">
-                    {appointment.service_id}
-                  </td>
+                  <td className="px-6 py-4">{appointment.service_id}</td>
 
                   {/* PRICE */}
                   <td className="px-6 py-4">
@@ -174,8 +183,23 @@ export default function AppointmentsTable({
 
                   {/* STATUS */}
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                      {appointment.status}
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full font-medium ${
+                        appointment.status === "confirmed"
+                          ? "bg-blue-100 text-blue-800"
+                          : appointment.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : appointment.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : appointment.status === "cancelled"
+                          ? "bg-red-100 text-red-800"
+                          : appointment.status === "no show"
+                          ? "bg-gray-100 text-gray-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {appointment.status?.charAt(0).toUpperCase() +
+                        appointment.status?.slice(1)}
                     </span>
                   </td>
 
@@ -187,12 +211,11 @@ export default function AppointmentsTable({
                   {/* ACTIONS */}
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-
                       {/* VIEW */}
                       <button
                         onClick={() => {
-                          setSelectedAppointment(appointment)
-                          setIsViewModalOpen(true)
+                          setSelectedAppointment(appointment);
+                          setIsViewModalOpen(true);
                         }}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
                       >
@@ -202,8 +225,8 @@ export default function AppointmentsTable({
                       {/* EDIT */}
                       <button
                         onClick={() => {
-                          setSelectedAppointment(appointment)
-                          setIsEditModalOpen(true)
+                          setSelectedAppointment(appointment);
+                          setIsEditModalOpen(true);
                         }}
                         className="p-2 text-gray-800 hover:bg-gray-100 rounded-lg"
                       >
@@ -217,7 +240,6 @@ export default function AppointmentsTable({
                       >
                         <Trash2 size={16} />
                       </button>
-
                     </div>
                   </td>
                 </tr>
@@ -228,9 +250,7 @@ export default function AppointmentsTable({
 
         {/* ================= PAGINATION ================= */}
         <div className="bg-gray-50 px-6 py-3 flex justify-between">
-          <span className="text-sm text-gray-600">
-            Page {page}
-          </span>
+          <span className="text-sm text-gray-600">Page {page}</span>
 
           <div className="flex gap-2">
             <button
@@ -266,11 +286,11 @@ export default function AppointmentsTable({
           isOpen={isEditModalOpen}
           appointment={selectedAppointment}
           onClose={() => {
-            setIsEditModalOpen(false)
-            onEdit()
+            setIsEditModalOpen(false);
+            onEdit();
           }}
         />
       )}
-    </>
-  )
+    </>
+  );
 }
