@@ -40,7 +40,7 @@ export default function StepSelectService({ onSelect, selected }: Props) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // setLoading(true);
+        setLoading(true);
         const data = await getServices(true);
         console.log(data)
         setServicesLits(data);
@@ -51,7 +51,7 @@ export default function StepSelectService({ onSelect, selected }: Props) {
       }
     };
     fetchServices();
-  }, [servicesList]);
+  }, []);
 
   return (
     <div className="text-center">

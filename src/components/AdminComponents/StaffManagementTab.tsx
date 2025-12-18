@@ -24,6 +24,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Users, Plus, AlertCircle, RefreshCw } from 'lucide-react'
 import { showToast } from '@/components/Toast'
+import { getUserProfile } from '@/services/userService'
 
 import {
   getStaffMembers,
@@ -80,6 +81,10 @@ export default function StaffManagementTab() {
     position: '',
     activeOnly: true,
   })
+
+  /** Logged-in user id (from /profile) */
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+
   
   /** Modal states */
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -145,10 +150,30 @@ export default function StaffManagementTab() {
   /**
    * Open modal to add new staff
    */
-  const handleAddNew = () => {
-    setSelectedStaff(null)
-    setIsModalOpen(true)
+  const handleAddNew = async () => {
+    try {
+      // 1️⃣ Fetch logged-in user profile
+      const profile = await getUserProfile()
+
+      // 2️⃣ Extract user id (adjust key if backend differs)
+      const userId = profile.id ?? profile.user_id
+
+      if (!userId) {
+        throw new Error('User ID not found in profile')
+      }
+
+      // 3️⃣ Store user id for modal usage
+      setCurrentUserId(userId)
+
+      // 4️⃣ Open modal
+      setSelectedStaff(null)
+      setIsModalOpen(true)
+    } catch (err) {
+      console.error(err)
+      showToast('Failed to load user profile', 'error')
+    }
   }
+
 
   /**
    * Open modal to edit staff
@@ -341,7 +366,9 @@ export default function StaffManagementTab() {
           onSave={handleSaveStaff}
           staff={selectedStaff}
           submitting={submitting}
+          userId={currentUserId}   // ✅ NEW
         />
+
       )}
 
       {/* ================================================= */}

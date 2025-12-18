@@ -100,37 +100,29 @@ interface OverviewTabProps {
 // =====================================================
 
 const MOCK_STATS: OverviewStats = {
-  todayAppointments: 12,
-  totalRevenue: 2450000,
-  totalCustomers: 156,
-  activeServices: 24,
+  todayAppointments: 1,
+  totalRevenue: 51500,
+  totalCustomers: 22,
+  activeServices: 4,
   appointmentsTrend: 8.5,
-  revenueTrend: 15.3,
-  customersTrend: 12.1,
+  revenueTrend: 10.3,
+  customersTrend: 8.1,
 }
 
 const MOCK_SCHEDULE: ScheduleItem[] = [
-  { id: 1, time: '09:00 AM', customerName: 'Sarah Johnson', serviceName: 'Hair Styling', staffName: 'Shalini F.', status: 'completed', duration: 60 },
-  { id: 2, time: '10:30 AM', customerName: 'Emma Wilson', serviceName: 'Bridal Makeup', staffName: 'Ravi P.', status: 'in-progress', duration: 90 },
-  { id: 3, time: '12:00 PM', customerName: 'Michael Brown', serviceName: 'Hair Cut', staffName: 'Kamal S.', status: 'upcoming', duration: 45 },
-  { id: 4, time: '02:00 PM', customerName: 'Lisa Anderson', serviceName: 'Facial Treatment', staffName: 'Nimali W.', status: 'upcoming', duration: 60 },
-  { id: 5, time: '03:30 PM', customerName: 'David Lee', serviceName: 'Hair Coloring', staffName: 'Shalini F.', status: 'upcoming', duration: 120 },
+  { id: 1, time: '10:00 AM', customerName: 'dilakshan123', serviceName: 'Hair Cut', staffName: 'JOHN DOE', status: 'in-progress', duration: 60 },
 ]
 
 const MOCK_ACTIVITIES: Activity[] = [
-  { id: 1, type: 'appointment', customerName: 'Sarah Johnson', serviceName: 'Hair Styling', status: 'completed', time: '10 min ago', staffName: 'Shalini F.' },
-  { id: 2, type: 'appointment', customerName: 'Emma Wilson', serviceName: 'Bridal Makeup', status: 'confirmed', time: '25 min ago' },
-  { id: 3, type: 'cancellation', customerName: 'John Doe', serviceName: 'Hair Cut', status: 'cancelled', time: '1 hour ago' },
-  { id: 4, type: 'booking', customerName: 'Lisa Anderson', serviceName: 'Facial Treatment', status: 'pending', time: '2 hours ago' },
-  { id: 5, type: 'appointment', customerName: 'Michael Brown', serviceName: 'Manicure', status: 'confirmed', time: '3 hours ago' },
+  { id: 1, type: 'appointment', customerName: 'dilakshan123', serviceName: 'Hair Cut', status: 'pending', time: '5+ hrs', staffName: 'JOHN DOE' },
+  { id: 2, type: 'appointment', customerName: 'JOHN DOE', serviceName: 'Hair Cut', status: 'confirmed', time: '2+ hrs' },
 ]
 
 const MOCK_TOP_SERVICES: TopService[] = [
-  { rank: 1, name: 'Hair Styling', category: 'Hair Care', bookings: 145, revenue: 580000 },
-  { rank: 2, name: 'Bridal Makeup', category: 'Bridal', bookings: 32, revenue: 480000 },
-  { rank: 3, name: 'Hair Coloring', category: 'Hair Care', bookings: 89, revenue: 400000 },
-  { rank: 4, name: 'Deep Cleansing Facial', category: 'Facial', bookings: 78, revenue: 312000 },
-  { rank: 5, name: 'Keratin Treatment', category: 'Hair Treatment', bookings: 45, revenue: 270000 },
+  { rank: 1, name: 'Hair Relaxing', category: 'Hair', bookings: 12, revenue: 20000 },
+  { rank: 2, name: 'Hair Tint', category: 'Hair', bookings: 5, revenue: 12500 },
+  { rank: 3, name: 'Nail polish', category: 'Nail', bookings: 1, revenue: 15000 },
+  { rank: 4, name: 'Hair Cut', category: 'Hair', bookings: 2, revenue: 4000 },
 ]
 
 const SERVICE_ENDPOINTS = [

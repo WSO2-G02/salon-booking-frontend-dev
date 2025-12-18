@@ -28,6 +28,8 @@ interface StaffModalProps {
   staff: StaffResponse | null
   /** Submitting state */
   submitting: boolean
+  userId?: number
+  userName?: string
 }
 
 // Position options
@@ -47,13 +49,14 @@ export default function StaffModal({
   onSave,
   staff,
   submitting,
+  userId,
+  userName,
 }: StaffModalProps) {
   // =====================================================
   // FORM STATE
   // =====================================================
   
   const [formData, setFormData] = useState({
-    user_id: '',
     employee_id: '',
     position: POSITIONS[0],
     specialties: '',
@@ -71,7 +74,7 @@ export default function StaffModal({
   useEffect(() => {
     if (staff) {
       setFormData({
-        user_id: staff.user_id.toString(),
+
         employee_id: staff.employee_id,
         position: staff.position,
         specialties: staff.specialties || '',
@@ -82,7 +85,6 @@ export default function StaffModal({
     } else {
       // Reset form for create
       setFormData({
-        user_id: '',
         employee_id: '',
         position: POSITIONS[0],
         specialties: '',
@@ -101,11 +103,8 @@ export default function StaffModal({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
     
-    // User ID required for create
-    if (!staff && !formData.user_id) {
-      newErrors.user_id = 'User ID is required'
-    } else if (!staff && isNaN(parseInt(formData.user_id))) {
-      newErrors.user_id = 'User ID must be a number'
+    if (!staff && !userId) {
+      newErrors.user = 'User information not loaded'
     }
     
     // Employee ID required for create
@@ -151,7 +150,7 @@ export default function StaffModal({
     } else {
       // Create: send all required fields
       const createData: StaffCreate = {
-        user_id: parseInt(formData.user_id),
+        user_id: userId!,
         employee_id: formData.employee_id.trim().toUpperCase(),
         position: formData.position,
         specialties: formData.specialties || undefined,
@@ -225,12 +224,12 @@ export default function StaffModal({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Hash size={14} className="inline mr-1" />
-                  User ID *
+                  User Name *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="user_id"
-                  value={formData.user_id}
+                  value={userName}
                   onChange={handleChange}
                   placeholder="Reference to user service"
                   className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
